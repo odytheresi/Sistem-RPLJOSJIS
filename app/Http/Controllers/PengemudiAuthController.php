@@ -28,27 +28,23 @@ class PengemudiAuthController extends Controller
 public function login(Request $request)
 {
     $request->validate([
-        'email' => 'required|email',
+        'nma_user' => 'required|string',
         'password' => 'required',
     ]);
-
     $credentials = [
-        'email' => $request->email,
+        'nma_user' => $request->nma_user,
         'password' => $request->password,
         'status' => 'aktif',
     ];
-
     if (Auth::guard('pengemudi')->attempt($credentials)) {
         $request->session()->regenerate();
-
-        return redirect('/pengemudi/dashboard');
+        return redirect()->route('pengemudi.dashboard');
     }
-
     return back()
         ->withErrors([
-            'email' => 'Email atau password salah.',
+            'nma_user' => 'Nama pengemudi atau password salah.',
         ])
-        ->withInput($request->only('email'));
+        ->withInput($request->only('nma_user'));
 }
 
     /**
@@ -79,7 +75,7 @@ public function profile()
     public function register(Request $request)
     {
         $request->validate([
-            'nma_user' => 'required|string|max:100',
+            'nma_user' => 'required|string|max:100|unique:pengemudi,nma_user',
             'email' => 'required|email|max:100|unique:pengemudi,email',
             'no_hp' => 'required|string|max:20',
             'password' => 'required|string|min:8|confirmed',
@@ -96,5 +92,45 @@ public function profile()
 
         return redirect('/pengemudi/register')
             ->with('success', 'Registrasi berhasil. Silakan login.');
+    }
+
+    /**
+ * Menampilkan halaman edit profil pengemudi.
+ */
+public function editProfile()
+{
+    $pengemudi = Auth::guard('pengemudi')->user();
+
+    return view('pengemudi.edit_profile', compact('pengemudi'));
+}
+
+/**
+ * Memproses perubahan profil pengemudi.
+ */
+public function updateProfile(Request $request)
+{
+    $pengemudi = Auth::guard('pengemudi')->user();
+
+    $request->validate([
+        'nma_user' => 'required|string|max:100|unique:pengemudi,nma_user,' . $pengemudi->user_id . ',user_id',
+        'email' => 'required|email|max:100|unique:pengemudi,email,' . $pengemudi->user_id . ',user_id',
+        'no_hp' => 'required|string|max:20',
+        'password' => 'nullable|string|min:8|confirmed',
+    ]);
+
+    $pengemudi->nma_user = $request->nma_user;
+    $pengemudi->email = $request->email;
+    $pengemudi->no_hp = $request->no_hp;
+
+    // Password hanya diubah jika pengguna mengisinya
+    if ($request->filled('password')) {
+        $pengemudi->pass = Hash::make($request->password);
+    }
+
+    $pengemudi->save();
+
+    return redirect()
+        ->route('pengemudi.profile')
+        ->with('success', 'Profil berhasil diperbarui.');
     }
 }

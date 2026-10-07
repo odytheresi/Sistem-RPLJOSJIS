@@ -53,6 +53,27 @@
             text-decoration: none;
             border-radius: 6px;
         }
+
+        .edit-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 18px;
+            background: #0f766e;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 18px;
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
     </style>
 </head>
 
@@ -82,6 +103,10 @@
         <p>{{ $pengemudi->status }}</p>
     </div>
 
+    <a href="{{ route('pengemudi.profile.edit') }}" class="edit-button">
+        Edit Profil
+
+    </a>
     <a href="{{ route('pengemudi.dashboard') }}" class="back-button">
         Kembali ke Dashboard
     </a>

@@ -51,6 +51,15 @@ Route::get('/pengemudi/profile', [PengemudiAuthController::class, 'profile'])
     ->middleware('pengemudi.auth')
     ->name('pengemudi.profile');
 
+// Edit Profile Pengemudi
+Route::get('/pengemudi/profile/edit', [PengemudiAuthController::class, 'editProfile'])
+    ->middleware('pengemudi.auth')
+    ->name('pengemudi.profile.edit');
+
+Route::put('/pengemudi/profile', [PengemudiAuthController::class, 'updateProfile'])
+    ->middleware('pengemudi.auth')
+    ->name('pengemudi.profile.update');
+
 // Logout Pengemudi
 Route::post('/pengemudi/logout', [PengemudiAuthController::class, 'logout'])
     ->name('pengemudi.logout');
