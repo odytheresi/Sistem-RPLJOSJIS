@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class admin extends Model
 {
      protected $table = 'admin';
-    protected $primaryKey = 'id_admin';
+    protected $primaryKey = 'id_admina';
     protected $fillable = ['id_user', 'nm_admin'];
 
     public function user(): BelongsTo
