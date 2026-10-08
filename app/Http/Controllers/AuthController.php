@@ -39,8 +39,13 @@ class AuthController extends Controller
             $request->session()->put('id_role', $user->id_role);
             $request->session()->regenerate();
 
-            // BERHASIL -> Lempar ke dashboard!
-            return redirect('/dashboard');
+            // BERHASIL -> Arahkan sesuai role
+            return match ($user->id_role) {
+                1 => redirect('/admin/dashboard'),
+                2 => redirect('/operator/dashboard'),
+                3 => redirect('/pengemudi/dashboard'),
+                default => redirect('/dashboard'),
+            };
         }
 
         // Jika gagal, kembalikan ke form sambil membawa input sebelumnya pakai withInput()

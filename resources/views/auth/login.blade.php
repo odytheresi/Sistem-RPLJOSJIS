@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Pengemudi</title>
+    <title>Login Sistem</title>
     <!-- CSS Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light d-flex justify-content-center align-items-center vh-100">
 
     <div class="card shadow-sm p-4" style="width: 400px;">
-        <h3 class="text-center mb-4">Login Pengemudi</h3>
+        <h3 class="text-center mb-4">Login</h3>
 
         <!-- Menampilkan pesan error jika login gagal -->
         @if ($errors->any())
