@@ -3,17 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChargingStation;
-use App\Models\Operator;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ChargingStationController extends Controller
 {
-    /**
-     * Menampilkan seluruh charging station.
-     */
-    public function index()
+    public function index(): View
     {
-        $stations = ChargingStation::all();
+        $operator = auth()->user()->operator;
+
+        $stations = $operator->stations()
+            ->withCount('chargers')
+            ->latest()
+            ->get();
 
         return view(
             'operator.station.index',
@@ -21,41 +24,42 @@ class ChargingStationController extends Controller
         );
     }
 
-    /**
-     * Menampilkan form tambah charging station.
-     */
-    public function create()
+    public function create(): View
     {
-        $operators = Operator::all();
-
-        return view(
-            'operator.station.create',
-            compact('operators')
-        );
+        return view('operator.station.create');
     }
 
-    /**
-     * Menyimpan charging station baru.
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'id_operator' => 'required|integer',
-            'nama_st' => 'required|string|max:100',
-            'alamat' => 'required|string',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'status' => 'required|in:aktif,nonaktif,maintenance',
+        $validated = $request->validate([
+            'nama_station' => [
+                'required',
+                'string',
+                'max:100'
+            ],
+            'alamat' => [
+                'required',
+                'string'
+            ],
+            'latitude' => [
+                'required',
+                'numeric',
+                'between:-90,90'
+            ],
+            'longitude' => [
+                'required',
+                'numeric',
+                'between:-180,180'
+            ],
+            'status' => [
+                'required',
+                'in:aktif,nonaktif,maintenance'
+            ],
         ]);
 
-        ChargingStation::create([
-            'id_operator' => $request->id_operator,
-            'nama_st' => $request->nama_st,
-            'alamat' => $request->alamat,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'status' => $request->status,
-        ]);
+        $operator = auth()->user()->operator;
+
+        $operator->stations()->create($validated);
 
         return redirect()
             ->route('operator.station.index')
@@ -65,10 +69,15 @@ class ChargingStationController extends Controller
             );
     }
 
-    
-    public function show($id)
+    public function show(ChargingStation $station): View
     {
-        $station = ChargingStation::findOrFail($id);
+        $this->checkOwner($station);
+
+        $station->load([
+            'chargers.konektor',
+            'tarifs',
+            'keluhan',
+        ]);
 
         return view(
             'operator.station.show',
@@ -76,41 +85,50 @@ class ChargingStationController extends Controller
         );
     }
 
-    
-    public function edit($id)
+    public function edit(ChargingStation $station): View
     {
-        $station = ChargingStation::findOrFail($id);
-
-        $operators = Operator::all();
+        $this->checkOwner($station);
 
         return view(
             'operator.station.edit',
-            compact('station', 'operators')
+            compact('station')
         );
     }
 
-    
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'id_operator' => 'required|integer',
-            'nama_st' => 'required|string|max:100',
-            'alamat' => 'required|string',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
-            'status' => 'required|in:aktif,nonaktif,maintenance',
+    public function update(
+        Request $request,
+        ChargingStation $station
+    ): RedirectResponse {
+
+        $this->checkOwner($station);
+
+        $validated = $request->validate([
+            'nama_station' => [
+                'required',
+                'string',
+                'max:100'
+            ],
+            'alamat' => [
+                'required',
+                'string'
+            ],
+            'latitude' => [
+                'required',
+                'numeric',
+                'between:-90,90'
+            ],
+            'longitude' => [
+                'required',
+                'numeric',
+                'between:-180,180'
+            ],
+            'status' => [
+                'required',
+                'in:aktif,nonaktif,maintenance'
+            ],
         ]);
 
-        $station = ChargingStation::findOrFail($id);
-
-        $station->update([
-            'id_operator' => $request->id_operator,
-            'nama_st' => $request->nama_st,
-            'alamat' => $request->alamat,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'status' => $request->status,
-        ]);
+        $station->update($validated);
 
         return redirect()
             ->route('operator.station.index')
@@ -120,10 +138,11 @@ class ChargingStationController extends Controller
             );
     }
 
-    
-    public function destroy($id)
-    {
-        $station = ChargingStation::findOrFail($id);
+    public function destroy(
+        ChargingStation $station
+    ): RedirectResponse {
+
+        $this->checkOwner($station);
 
         $station->delete();
 
@@ -133,5 +152,16 @@ class ChargingStationController extends Controller
                 'success',
                 'Charging station berhasil dihapus.'
             );
+    }
+
+    private function checkOwner(
+        ChargingStation $station
+    ): void {
+
+        abort_unless(
+            $station->id_operator ===
+            auth()->user()->operator->id_operator,
+            403
+        );
     }
 }

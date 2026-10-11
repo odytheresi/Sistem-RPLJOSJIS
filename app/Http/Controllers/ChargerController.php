@@ -5,14 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\Charger;
 use App\Models\ChargingStation;
 use App\Models\TipeKonektor;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class ChargerController extends Controller
 {
-    
-    public function index()
+    public function index(): View
     {
-        $chargers = Charger::all();
+        $operator = auth()->user()->operator;
+
+        $chargers = Charger::with([
+            'station',
+            'konektor'
+        ])
+        ->whereHas('station', function ($query) use ($operator) {
+            $query->where(
+                'id_operator',
+                $operator->id_operator
+            );
+        })
+        ->latest()
+        ->get();
 
         return view(
             'operator.charger.index',
@@ -20,37 +34,60 @@ class ChargerController extends Controller
         );
     }
 
-    
-    public function create()
+    public function create(): View
     {
-        $stations = ChargingStation::all();
+        $operator = auth()->user()->operator;
 
-        $konektors = TipeKonektor::all();
+        $stations = $operator->stations()
+            ->where('status', 'aktif')
+            ->get();
+
+        $konektors = TipeKonektor::orderBy(
+            'nama_konektor'
+        )->get();
 
         return view(
             'operator.charger.create',
-            compact('stations', 'konektors')
+            compact(
+                'stations',
+                'konektors'
+            )
         );
     }
 
-    
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'id_station' => 'required|integer',
-            'id_konektor' => 'required|integer',
-            'kd_charger' => 'required|string|max:100',
-            'daya_maks' => 'required|numeric',
-            'status' => 'required|in:aktif,nonaktif,maintenance',
+        $validated = $request->validate([
+            'id_station' => [
+                'required',
+                'integer'
+            ],
+            'id_konektor' => [
+                'required',
+                'integer'
+            ],
+            'kode_charger' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:charger,kode_charger'
+            ],
+            'daya_maks' => [
+                'required',
+                'numeric',
+                'min:0'
+            ],
+            'status' => [
+                'required',
+                'in:tersedia,digunakan,maintenance,error'
+            ],
         ]);
 
-        Charger::create([
-            'id_station' => $request->id_station,
-            'id_konektor' => $request->id_konektor,
-            'kd_charger' => $request->kd_charger,
-            'daya_maks' => $request->daya_maks,
-            'status' => $request->status,
-        ]);
+        $this->checkStationOwner(
+            $validated['id_station']
+        );
+
+        Charger::create($validated);
 
         return redirect()
             ->route('operator.charger.index')
@@ -60,12 +97,16 @@ class ChargerController extends Controller
             );
     }
 
-    /**
-     * Menampilkan detail charger.
-     */
-    public function show($id)
+    public function show(Charger $charger): View
     {
-        $charger = Charger::findOrFail($id);
+        $this->checkOwner($charger);
+
+        $charger->load([
+            'station',
+            'konektor',
+            'tarifs',
+            'perbaikan'
+        ]);
 
         return view(
             'operator.charger.show',
@@ -73,16 +114,19 @@ class ChargerController extends Controller
         );
     }
 
-    /**
-     * Menampilkan form edit charger.
-     */
-    public function edit($id)
+    public function edit(Charger $charger): View
     {
-        $charger = Charger::findOrFail($id);
+        $this->checkOwner($charger);
 
-        $stations = ChargingStation::all();
+        $operator = auth()->user()->operator;
 
-        $konektors = TipeKonektor::all();
+        $stations = $operator->stations()
+            ->where('status', 'aktif')
+            ->get();
+
+        $konektors = TipeKonektor::orderBy(
+            'nama_konektor'
+        )->get();
 
         return view(
             'operator.charger.edit',
@@ -94,39 +138,60 @@ class ChargerController extends Controller
         );
     }
 
-  
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'id_station' => 'required|integer',
-            'id_konektor' => 'required|integer',
-            'kd_charger' => 'required|string|max:100',
-            'daya_maks' => 'required|numeric',
-            'status' => 'required|in:aktif,nonaktif,maintenance',
+    public function update(
+        Request $request,
+        Charger $charger
+    ): RedirectResponse {
+
+        $this->checkOwner($charger);
+
+        $validated = $request->validate([
+            'id_station' => [
+                'required',
+                'integer'
+            ],
+            'id_konektor' => [
+                'required',
+                'integer'
+            ],
+            'kode_charger' => [
+                'required',
+                'string',
+                'max:50',
+                'unique:charger,kode_charger,' .
+                $charger->id_charger .
+                ',id_charger'
+            ],
+            'daya_maks' => [
+                'required',
+                'numeric',
+                'min:0'
+            ],
+            'status' => [
+                'required',
+                'in:tersedia,digunakan,maintenance,error'
+            ],
         ]);
 
-        $charger = Charger::findOrFail($id);
+        $this->checkStationOwner(
+            $validated['id_station']
+        );
 
-        $charger->update([
-            'id_station' => $request->id_station,
-            'id_konektor' => $request->id_konektor,
-            'kd_charger' => $request->kd_charger,
-            'daya_maks' => $request->daya_maks,
-            'status' => $request->status,
-        ]);
+        $charger->update($validated);
 
         return redirect()
             ->route('operator.charger.index')
             ->with(
                 'success',
-                'Charger berhasil diperbarui.'
+                'Data charger berhasil diperbarui.'
             );
     }
 
-    
-    public function destroy($id)
-    {
-        $charger = Charger::findOrFail($id);
+    public function destroy(
+        Charger $charger
+    ): RedirectResponse {
+
+        $this->checkOwner($charger);
 
         $charger->delete();
 
@@ -136,5 +201,51 @@ class ChargerController extends Controller
                 'success',
                 'Charger berhasil dihapus.'
             );
+    }
+
+    public function updateStatus(
+        Request $request,
+        Charger $charger
+    ): RedirectResponse {
+
+        $this->checkOwner($charger);
+
+        $validated = $request->validate([
+            'status' => [
+                'required',
+                'in:tersedia,digunakan,maintenance,error'
+            ],
+        ]);
+
+        $charger->update($validated);
+
+        return back()->with(
+            'success',
+            'Status charger berhasil diperbarui.'
+        );
+    }
+
+    private function checkOwner(Charger $charger): void
+    {
+        abort_unless(
+            $charger->station->id_operator ===
+            auth()->user()->operator->id_operator,
+            403
+        );
+    }
+
+    private function checkStationOwner(
+        int $stationId
+    ): void {
+
+        ChargingStation::where(
+            'id_station',
+            $stationId
+        )
+        ->where(
+            'id_operator',
+            auth()->user()->operator->id_operator
+        )
+        ->firstOrFail();
     }
 }
