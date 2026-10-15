@@ -2,74 +2,51 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
+use App\Models\ChargingStation;
 use App\Models\Charger;
-use App\Models\Keluhan;
+use App\Models\Tarif;
 use App\Models\Perbaikan;
-use Illuminate\View\View;
+use App\Models\Keluhan;
 
 class OperatorController extends Controller
 {
-    public function index(): View
+    public function index()
     {
-        $operator = auth()->user()->operator;
+        $user = Auth::user();
 
-        $stationIds = $operator->stations()->pluck('id_station');
+        if (!$user) {
+            return redirect()->route('login');
+        }
 
-        // Satu query untuk semua hitungan status charger
-        $perStatus = Charger::whereIn('id_station', $stationIds)
-            ->selectRaw('status, COUNT(*) as total')
-            ->groupBy('status')
-            ->pluck('total', 'status');
+        $operator = $user->operator;
 
-        $totalStation       = $stationIds->count();
-        $totalCharger       = (int) $perStatus->sum();
-        $chargerTersedia    = (int) ($perStatus['tersedia'] ?? 0);
-        $chargerDigunakan   = (int) ($perStatus['digunakan'] ?? 0);
-        $chargerMaintenance = (int) ($perStatus['maintenance'] ?? 0);
-        $chargerError       = (int) ($perStatus['error'] ?? 0);
+        // Ambil data untuk tabel dashboard
+        $chargingStations = ChargingStation::all();
+        $chargers = Charger::all();
+        $tarifs = Tarif::all();
+        $perbaikan = Perbaikan::all();
+        $keluhan = Keluhan::all();
 
-        $keluhanMenunggu = Keluhan::whereIn('id_station', $stationIds)
-            ->where('status', 'menunggu')
-            ->count();
+        // Hitung jumlah data
+        $totalStation = $chargingStations->count();
+        $totalCharger = $chargers->count();
+        $totalTarif = $tarifs->count();
+        $totalPerbaikan = $perbaikan->count();
+        $totalKeluhan = $keluhan->count();
 
-        $maintenanceBerjalan = Perbaikan::whereHas('charger', function ($query) use ($stationIds) {
-                $query->whereIn('id_station', $stationIds);
-            })
-            ->whereIn('status', ['dijadwalkan', 'proses'])
-            ->count();
-
-        // Data untuk panel di dashboard
-        $stations = $operator->stations()
-            ->withCount('chargers')
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $chargerBermasalah = Charger::with('station')
-            ->whereIn('id_station', $stationIds)
-            ->whereIn('status', ['error', 'maintenance'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $keluhanTerbaru = Keluhan::with('station')
-            ->whereIn('id_station', $stationIds)
-            ->latest()
-            ->take(5)
-            ->get();
-
-        return view('operator.dashboard', compact(
-            'totalStation',
-            'totalCharger',
-            'chargerTersedia',
-            'chargerDigunakan',
-            'chargerMaintenance',
-            'chargerError',
-            'keluhanMenunggu',
-            'maintenanceBerjalan',
-            'stations',
-            'chargerBermasalah',
-            'keluhanTerbaru'
-        ));
+        return view('operator.dashboard', [
+            'operator' => $operator,
+            'chargingStations' => $chargingStations,
+            'chargers' => $chargers,
+            'tarifs' => $tarifs,
+            'perbaikan' => $perbaikan,
+            'keluhan' => $keluhan,
+            'totalStation' => $totalStation,
+            'totalCharger' => $totalCharger,
+            'totalTarif' => $totalTarif,
+            'totalPerbaikan' => $totalPerbaikan,
+            'totalKeluhan' => $totalKeluhan,
+        ]);
     }
 }
