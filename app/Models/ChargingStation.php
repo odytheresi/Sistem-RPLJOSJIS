@@ -13,8 +13,10 @@ class ChargingStation extends Model
         'id_operator', 'nama_st', 'alamat', 'longitude', 'latitude', 'status'
     ];
 
-    // Relasi: Satu stasiun memiliki banyak charger
-    public function chargers(): HasMany
+    /**
+     * Relasi: Satu stasiun memiliki banyak charger
+     */
+    public function chargers()
     {
         return $this->hasMany(Charger::class, 'id_station', 'id_station');
     }

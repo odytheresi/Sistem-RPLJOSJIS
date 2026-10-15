@@ -257,74 +257,57 @@
     </main>
 
     <script>
-        // ===== DATA DUMMY (nanti diganti fetch() dari API Laravel) =====
-        const operator = {
-            id_operator: 1,
-            nama: "Budi Santoso",
-            user_id: 101
-        };
+        // ===== DATA DARI CONTROLLER LARAVEL =====
+        const operator = @json($operator);
+        const chargingStations = @json($chargingStations);
+        const chargers = @json($chargers);
+        const tarifs = @json($tarifs);
+        const keluhan = @json($keluhan);
 
-        const chargingStations = [
-            { id_station: 1, nama_st: "SPKLU Malioboro", alamat: "Jl. Malioboro No. 1, Yogyakarta", status: "Aktif" },
-            { id_station: 2, nama_st: "SPKLU Slamet Riyadi", alamat: "Jl. Slamet Riyadi, Surakarta", status: "Dalam Perawatan" },
-            { id_station: 3, nama_st: "SPKLU Jalan Solo", alamat: "Jl. Solo KM 8, Yogyakarta", status: "Penuh" },
-        ];
-
-        const chargers = [
-            { kd_charger: "CHG-001", station: "SPKLU Malioboro", konektor: "CCS2", daya: "50 kW", penggunaan: "Tersedia", kondisi: "Normal" },
-            { kd_charger: "CHG-002", station: "SPKLU Malioboro", konektor: "Type 2", daya: "22 kW", penggunaan: "Digunakan", kondisi: "Normal" },
-            { kd_charger: "CHG-003", station: "SPKLU Slamet Riyadi", konektor: "CCS2", daya: "50 kW", penggunaan: "Tersedia", kondisi: "Error" },
-        ];
-
-        const tarifs = [
-            { id_tarif: 1, station: "SPKLU Malioboro", harga_per_kwh: 2500, berlaku_mulai: "2026-01-01", status: "Aktif" },
-            { id_tarif: 2, station: "SPKLU Slamet Riyadi", harga_per_kwh: 2300, berlaku_mulai: "2026-02-15", status: "Aktif" },
-        ];
-
-        const keluhan = [
-            { tanggal: "2026-09-28", station: "SPKLU Slamet Riyadi", pengemudi: "Andi Wijaya", isi: "Charger error saat digunakan", status: "Diproses" },
-            { tanggal: "2026-09-25", station: "SPKLU Jalan Solo", pengemudi: "Sari Dewi", isi: "Slot parkir penuh terus", status: "Selesai" },
-        ];
+        // Angka statistik dari controller teman Anda
+        const totalStationCount = {{ $totalStation }};
+        const totalChargerCount = {{ $totalCharger }};
+        const chargerAktifCount = {{ $chargerAktif }};
+        const chargerNonaktifCount = {{ $chargerNonaktif }};
+        const chargerMaintenanceCount = {{ $chargerMaintenance }};
 
         // ===== RENDER IDENTITAS OPERATOR =====
         document.getElementById('operator-name').textContent = operator.nama;
         document.getElementById('operator-id').textContent = 'ID Operator #' + operator.id_operator;
         document.getElementById('avatar-initial').textContent = operator.nama.charAt(0).toUpperCase();
 
-        // ===== RENDER STAT CARDS =====
-        const totalCharger = chargers.length;
-        const chargerTersedia = chargers.filter(c => c.penggunaan === 'Tersedia').length;
-        const chargerError = chargers.filter(c => c.kondisi === 'Error').length;
-
+        // ===== RENDER STAT CARDS (Menggunakan data count teman Anda) =====
         document.getElementById('stats-grid').innerHTML = `
             <div class="stat-card">
                 <div class="label">Total Stasiun</div>
-                <div class="value">${chargingStations.length}</div>
+                <div class="value">${totalStationCount}</div>
             </div>
             <div class="stat-card green">
-                <div class="label">Charger Tersedia</div>
-                <div class="value">${chargerTersedia}/${totalCharger}</div>
+                <div class="label">Charger Aktif</div>
+                <div class="value">${chargerAktifCount}/${totalChargerCount}</div>
             </div>
             <div class="stat-card orange">
-                <div class="label">Keluhan Aktif</div>
-                <div class="value">${keluhan.filter(k => k.status !== 'Selesai').length}</div>
+                <div class="label">Maintenance</div>
+                <div class="value">${chargerMaintenanceCount}</div>
             </div>
             <div class="stat-card red">
-                <div class="label">Charger Bermasalah</div>
-                <div class="value">${chargerError}</div>
+                <div class="label">Non-Aktif</div>
+                <div class="value">${chargerNonaktifCount}</div>
             </div>
         `;
 
         function badgeClass(status) {
+            if (!status) return '';
             return status.toLowerCase().replace(/\s+/g, '-');
         }
 
-        // ===== RENDER CHARGING STATION =====
+        // ===== RENDER CHARGING STATION (Tabel) =====
         const stationBody = document.querySelector('#station-table tbody');
+        stationBody.innerHTML = '';
         chargingStations.forEach(cs => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${cs.id_station}</td>
+                <td>${cs.id}</td>
                 <td>${cs.nama_st}</td>
                 <td>${cs.alamat}</td>
                 <td><span class="badge ${badgeClass(cs.status)}">${cs.status}</span></td>
@@ -333,32 +316,34 @@
         });
         document.getElementById('station-count').textContent = chargingStations.length + ' lokasi';
 
-        // ===== RENDER CHARGER =====
+        // ===== RENDER CHARGER (Tabel) =====
         const chargerBody = document.querySelector('#charger-table tbody');
+        chargerBody.innerHTML = '';
         chargers.forEach(c => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${c.kd_charger}</td>
-                <td>${c.station}</td>
-                <td>${c.konektor}</td>
-                <td>${c.daya}</td>
-                <td><span class="badge ${badgeClass(c.penggunaan)}">${c.penggunaan}</span></td>
-                <td><span class="badge ${badgeClass(c.kondisi)}">${c.kondisi}</span></td>
+                <td>${c.charging_station ? c.charging_station.nama_st : '-'}</td>
+                <td>${c.tipe_konektor ? c.tipe_konektor.nm_konektor : '-'}</td>
+                <td>${c.daya_maks ?? c.daya} kW</td>
+                <td><span class="badge ${badgeClass(c.status ?? 'Tersedia')}">${c.status ?? 'Tersedia'}</span></td>
+                <td><span class="badge normal">Normal</span></td>
             `;
             chargerBody.appendChild(row);
         });
         document.getElementById('charger-count').textContent = chargers.length + ' unit';
 
-        // ===== RENDER TARIF =====
+        // ===== RENDER TARIF (Tabel) =====
         const tarifBody = document.querySelector('#tarif-table tbody');
+        tarifBody.innerHTML = '';
         tarifs.forEach(t => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${t.id_tarif}</td>
-                <td>${t.station}</td>
-                <td>Rp ${t.harga_per_kwh.toLocaleString('id-ID')}</td>
+                <td>${t.id}</td>
+                <td>${t.charger && t.charger.charging_station ? t.charger.charging_station.nama_st : '-'}</td>
+                <td>Rp ${Number(t.harga_per_kWh ?? t.harga_per_kwh ?? 0).toLocaleString('id-ID')}</td>
                 <td>${t.berlaku_mulai}</td>
-                <td><span class="badge ${badgeClass(t.status)}">${t.status}</span></td>
+                <td><span class="badge aktif">Aktif</span></td>
             `;
             tarifBody.appendChild(row);
         });
@@ -366,20 +351,9 @@
 
         // ===== RENDER KELUHAN =====
         const keluhanBody = document.querySelector('#keluhan-table tbody');
+        keluhanBody.innerHTML = '';
         if (keluhan.length === 0) {
             keluhanBody.innerHTML = `<tr><td colspan="5" class="empty-state">Belum ada keluhan</td></tr>`;
-        } else {
-            keluhan.forEach(k => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${k.tanggal}</td>
-                    <td>${k.station}</td>
-                    <td>${k.pengemudi}</td>
-                    <td>${k.isi}</td>
-                    <td><span class="badge ${badgeClass(k.status)}">${k.status}</span></td>
-                `;
-                keluhanBody.appendChild(row);
-            });
         }
         document.getElementById('keluhan-count').textContent = keluhan.length + ' keluhan';
     </script>

@@ -1,175 +1,265 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Lokasi Stasiun - Real-Time JOSJIS</title>
+    <title>Daftar Lokasi Stasiun</title>
     <!-- Tailwind CSS untuk styling modern -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS untuk Peta -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
-    <div class="container mx-auto p-6 max-w-4xl" id="app">
-        <!-- Indikator Loading saat pertama kali dibuka -->
-        <div id="loading" class="text-center py-12 text-gray-600 font-medium">Memuat data stasiun secara real-time...</div>
-
-        <!-- Konten Utama (Awalnya tersembunyi) -->
-        <div id="content" class="hidden">
-            <!-- Header Informasi Stasiun -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6 border-l-4 border-blue-600">
-                <h1 id="station-name" class="text-2xl font-bold text-gray-800 mb-1"></h1>
-                <p id="station-address" class="text-gray-600 mb-4"></p>
-                <div class="flex flex-wrap gap-3 text-sm">
-                    <span id="station-status" class="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium"></span>
-                    <span id="station-total" class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full font-medium"></span>
-                </div>
+    <div class="container mx-auto p-6 max-w-6xl">
+        <!-- Header Halaman & Tombol Kembali -->
+        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Daftar Detail Lokasi Stasiun Pengisian</h1>
+                <p class="text-gray-600 text-sm">Kelola dan pantau seluruh lokasi stasiun beserta perangkat charger secara menyeluruh.</p>
             </div>
+            <a href="{{ route('operator.dashboard') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition">
+                Kembali ke Dashboard
+            </a>
+        </div>
 
-            <!-- Ringkasan Status Ketersediaan Charger (Real-Time FR-02) -->
-            <div class="grid grid-cols-4 gap-4 mb-6">
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center shadow-sm">
-                    <p class="text-xs text-green-600 font-semibold uppercase">Tersedia</p>
-                    <p id="count-tersedia" class="text-3xl font-extrabold text-green-700 mt-1">0</p>
-                </div>
-                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center shadow-sm">
-                    <p class="text-xs text-amber-600 font-semibold uppercase">Digunakan</p>
-                    <p id="count-digunakan" class="text-3xl font-extrabold text-amber-700 mt-1">0</p>
-                </div>
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center shadow-sm">
-                    <p class="text-xs text-red-600 font-semibold uppercase">Error</p>
-                    <p id="count-error" class="text-3xl font-extrabold text-red-700 mt-1">0</p>
-                </div>
-                <div class="bg-gray-50 border border-gray-300 rounded-lg p-4 text-center shadow-sm">
-                    <p class="text-xs text-gray-600 font-semibold uppercase">Perbaikan</p>
-                    <p id="count-perbaikan" class="text-3xl font-extrabold text-gray-700 mt-1">0</p>
-                </div>
-            </div>
+        <!-- FITUR PENCARIAN LOKASI CHARGER -->
+        <div class="mb-6">
+            <input type="text" id="search-station" placeholder="🔍 Cari berdasarkan nama stasiun atau alamat..." 
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+        </div>
 
-            <!-- Tabel Daftar Charger, Konektor, & Tarif -->
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                    <h2 class="text-lg font-bold text-gray-800">Daftar Perangkat Charger, Konektor & Tarif</h2>
-                    <button onclick="fetchStationData()" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 font-medium">Perbarui Status</button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode Charger</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jenis Konektor</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Daya Maks</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarif / kWh</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="charger-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- Data akan diisi otomatis melalui JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
+        <!-- DAFTAR STASIUN -->
+        @if(isset($chargingStations) && $chargingStations->count() > 0)
+            <div id="station-list" class="space-y-6">
+                @foreach($chargingStations as $station)
+                    <div class="station-card bg-white rounded-lg shadow-md overflow-hidden border border-gray-200"
+                         data-name="{{ strtolower($station->nama_st) }}" 
+                         data-address="{{ strtolower($station->alamat) }}">
+                        
+                        <!-- Informasi Utama Stasiun & Tombol Peta Modal -->
+                        <div class="p-6 bg-gradient-to-r from-blue-50 to-white border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">{{ $station->nama_st }}</h2>
+                                <p class="text-gray-600 text-sm mt-1">📍 {{ $station->alamat }}</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                @php
+                                    $statusColor = 'bg-gray-100 text-gray-800';
+                                    if(strtolower($station->status ?? '') == 'aktif' || strtolower($station->status ?? '') == 'tersedia') {
+                                        $statusColor = 'bg-green-100 text-green-800';
+                                    } elseif(strtolower($station->status ?? '') == 'maintenance' || strtolower($station->status ?? '') == 'perbaikan') {
+                                        $statusColor = 'bg-amber-100 text-amber-800';
+                                    }
+                                @endphp
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusColor }}">
+                                    Status: {{ ucfirst($station->status ?? 'Aktif') }}
+                                </span>
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                    Total Unit: {{ $station->chargers->count() }} Charger
+                                </span>
+
+                                <!-- Tombol untuk Membuka Peta Modal -->
+                                @if($station->latitude && $station->longitude)
+                                    <button onclick="openMapModal('{{ addslashes($station->nama_st) }}', {{ $station->latitude }}, {{ $station->longitude }})" 
+                                            class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
+                                        🗺️ Lihat Peta
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Tabel Detail Perangkat Charger, Konektor, Tarif & Status -->
+                        <div class="p-6">
+                            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">Daftar Perangkat Charger, Konektor & Tarif</h3>
+                            @if($station->chargers->count() > 0)
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Kode Charger</th>
+                                                <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Jenis Konektor</th>
+                                                <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Daya Maks</th>
+                                                <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Tarif / kWh</th>
+                                                <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase">Status Real-Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 bg-white">
+                                            @foreach($station->chargers as $charger)
+                                                @php
+                                                    $konektorName = $charger->tipeKonektor ? $charger->tipeKonektor->nm_konektor : '-';
+                                                    $jenisCharging = $charger->tipeKonektor ? $charger->tipeKonektor->jenis_charging : '-';
+                                                    
+                                                    // Ambil tarif terbaru
+                                                    $tarifStr = 'Belum diatur';
+                                                    if ($charger->tarifs && $charger->tarifs->count() > 0) {
+                                                        $latestTarif = $charger->tarifs->sortByDesc('berlaku_mulai')->first();
+                                                        $tarifStr = 'Rp ' . number_format($latestTarif->harga_per_kWh, 0, ',', '.');
+                                                    }
+
+                                                    // Warna badge status real-time
+                                                    $badge = 'bg-gray-100 text-gray-800';
+                                                    if ($charger->status === 'tersedia') {
+                                                        $badge = 'bg-green-100 text-green-800';
+                                                    } elseif ($charger->status === 'digunakan') {
+                                                        $badge = 'bg-amber-100 text-amber-800';
+                                                    } elseif ($charger->status === 'error') {
+                                                        $badge = 'bg-red-100 text-red-800';
+                                                    } elseif ($charger->status === 'perbaikan') {
+                                                        $badge = 'bg-gray-200 text-gray-800';
+                                                    }
+                                                @endphp
+                                                <tr>
+                                                    <td class="px-4 py-3 font-bold text-gray-900">{{ $charger->kd_charger }}</td>
+                                                    <td class="px-4 py-3 text-gray-700">
+                                                        {{ $konektorName }} <span class="text-xs text-gray-400">({{ $jenisCharging }})</span>
+                                                    </td>
+                                                    <td class="px-4 py-3 text-gray-700">{{ $charger->daya_maks }} kW</td>
+                                                    <td class="px-4 py-3 text-gray-700 font-medium">{{ $tarifStr }}</td>
+                                                    <td class="px-4 py-3">
+                                                        <span class="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full {{ $badge }}">
+                                                            {{ ucfirst($charger->status) }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <p class="text-gray-500 text-sm italic">Belum ada perangkat charger yang terdaftar di stasiun ini.</p>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
             </div>
+        @else
+            <div class="bg-white rounded-lg shadow-md p-12 text-center text-gray-500">
+                <p class="text-lg font-medium">Belum ada data lokasi stasiun yang tersedia di database.</p>
+            </div>
+        @endif
+    </div>
+
+    <!-- MODAL PETA LEAFLET -->
+    <div id="mapModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl p-5 relative">
+            <!-- Header Modal -->
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 id="modalTitle" class="text-lg font-bold text-gray-800">Peta Lokasi Stasiun</h3>
+                <button onclick="closeMapModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold focus:outline-none">&times;</button>
+            </div>
+            
+            <!-- Container Peta -->
+            <div id="modalMap" style="height: 400px; width: 100%; border-radius: 8px;" class="z-0"></div>
         </div>
     </div>
 
+    <!-- Leaflet JS untuk Peta -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Mengambil ID stasiun secara dinamis dari rute web Laravel
-        const stationId = {{ $id }};
+        let modalMap = null;
 
-        async function fetchStationData() {
-            try {
-                // Melakukan request ke API Controller yang sudah dibuat
-                let response = await fetch(`/api/stations/${stationId}`);
-                let result = await response.json();
+        function openMapModal(namaStasiun, stationLat, stationLng) {
+            // Tampilkan modal
+            document.getElementById('mapModal').classList.remove('hidden');
+            document.getElementById('modalTitle').innerText = 'Rute ke Lokasi: ' + namaStasiun;
 
-                if (result.success) {
-                    let station = result.data;
+            // Inisialisasi peta Leaflet di dalam modal jika belum pernah dibuat
+            if (!modalMap) {
+                modalMap = L.map('modalMap');
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(modalMap);
+            }
 
-                    // Mengisi informasi teks stasiun
-                    document.getElementById('station-name').innerText = station.nama_st;
-                    document.getElementById('station-address').innerText = station.alamat;
-                    document.getElementById('station-status').innerText = `Status Stasiun: ${station.status.toUpperCase()}`;
-                    document.getElementById('station-total').innerText = `Total Unit: ${station.chargers.length} Charger`;
-
-                    // Menghitung ketersediaan unit charger secara real-time
-                    let tersedia = station.chargers.filter(c => c.status === 'tersedia').length;
-                    let digunakan = station.chargers.filter(c => c.status === 'digunakan').length;
-                    let error = station.chargers.filter(c => c.status === 'error').length;
-                    let perbaikan = station.chargers.filter(c => c.status === 'perbaikan').length;
-
-                    document.getElementById('count-tersedia').innerText = tersedia;
-                    document.getElementById('count-digunakan').innerText = digunakan;
-                    document.getElementById('count-error').innerText = error;
-                    document.getElementById('count-perbaikan').innerText = perbaikan;
-
-                    // Render baris data tabel charger
-                    let tbody = document.getElementById('charger-table-body');
-                    tbody.innerHTML = '';
-
-                    if (station.chargers.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Belum ada perangkat charger di stasiun ini.</td></tr>`;
-                    } else {
-                        station.chargers.forEach(charger => {
-                            let konektorName = charger.tipe_konektor ? charger.tipe_konektor.nm_konektor : '-';
-                            let jenisCharging = charger.tipe_konektor ? charger.tipe_konektor.jenis_charging : '-';
-                            
-                            // Mendapatkan tarif terbaru
-                            let tarifStr = 'Belum diatur';
-                            if (charger.tarifs && charger.tarifs.length > 0) {
-                                let latestTarif = charger.tarifs.reduce((prev, current) => (prev.berlaku_mulai > current.berlaku_mulai) ? prev : current);
-                                tarifStr = `Rp ${Number(latestTarif.harga_per_kWh).toLocaleString('id-ID')}`;
-                            }
-
-                            // Menentukan warna badge status
-                            let badgeClass = 'bg-gray-200 text-gray-800';
-                            let statusText = charger.status;
-                            if (charger.status === 'tersedia') {
-                                badgeClass = 'bg-green-100 text-green-800';
-                                statusText = 'Tersedia';
-                            } else if (charger.status === 'digunakan') {
-                                badgeClass = 'bg-amber-100 text-amber-800';
-                                statusText = 'Sedang Digunakan';
-                            } else if (charger.status === 'error') {
-                                badgeClass = 'bg-red-100 text-red-800';
-                                statusText = 'Error';
-                            } else if (charger.status === 'perbaikan') {
-                                badgeClass = 'bg-gray-200 text-gray-800';
-                                statusText = 'Perbaikan';
-                            }
-
-                            let row = `
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap font-bold text-gray-900">${charger.kd_charger}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-700">
-                                        ${konektorName} <span class="text-xs text-gray-400">(${jenisCharging})</span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-700">${charger.daya_maks} kW</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">${tarifStr}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${badgeClass}">${statusText}</span>
-                                    </td>
-                                </tr>
-                            `;
-                            tbody.innerHTML += row;
-                        });
-                    }
-
-                    // Sembunyikan loading, tampilkan konten
-                    document.getElementById('loading').classList.add('hidden');
-                    document.getElementById('content').classList.remove('hidden');
-                } else {
-                    document.getElementById('loading').innerText = 'Stasiun tidak ditemukan.';
+            // Hapus marker atau garis rute sebelumnya agar tidak menumpuk
+            modalMap.eachLayer(function (layer) {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    modalMap.removeLayer(layer);
                 }
-            } catch (error) {
-                console.error('Terjadi kesalahan saat mengambil data:', error);
-                document.getElementById('loading').innerText = 'Gagal memuat data dari server.';
+            });
+
+            // Tambahkan marker titik stasiun SPKLU
+            const stationMarker = L.marker([stationLat, stationLng]).addTo(modalMap)
+                .bindPopup('<b>' + namaStasiun + ' (SPKLU)</b>');
+
+            // Deteksi lokasi GPS pengguna untuk mencakup posisi Anda ke SPKLU
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+
+                    // Buat marker kustom untuk posisi Anda
+                    const userMarker = L.marker([userLat, userLng], {
+                        icon: L.divIcon({
+                            className: 'custom-user-icon',
+                            html: '<div style="background-color: #3b82f6; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.6);"></div>',
+                            iconSize: [14, 14]
+                        })
+                    }).addTo(modalMap).bindPopup('<b>📍 Posisi Anda Sekarang</b>');
+
+                    // Buat garis rute (garis putus-putus) dari lokasi Anda ke stasiun
+                    const routeLine = L.polyline([
+                        [userLat, userLng],
+                        [stationLat, stationLng]
+                    ], {
+                        color: '#2563eb',
+                        weight: 4,
+                        opacity: 0.8,
+                        dashArray: '6, 8'
+                    }).addTo(modalMap);
+
+                    // Sesuaikan batas peta (zoom otomatis) agar mencakup posisi Anda dan SPKLU
+                    const bounds = L.latLngBounds([[userLat, userLng], [stationLat, stationLng]]);
+                    modalMap.fitBounds(bounds, { padding: [50, 50] });
+
+                    stationMarker.openPopup();
+                }, function(error) {
+                    // Jika GPS ditolak/gagal, fokuskan peta hanya ke lokasi stasiun
+                    modalMap.setView([stationLat, stationLng], 15);
+                    stationMarker.openPopup();
+                }, { timeout: 10000 });
+            } else {
+                modalMap.setView([stationLat, stationLng], 15);
+                stationMarker.openPopup();
+            }
+
+            // Memperbaiki render tile peta Leaflet yang abu-abu setelah modal terbuka
+            setTimeout(() => {
+                modalMap.invalidateSize();
+            }, 250);
+        }
+
+        function closeMapModal() {
+            // Sembunyikan modal
+            document.getElementById('mapModal').classList.add('hidden');
+        }
+
+        // Tutup modal jika pengguna mengklik area luar kotak modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('mapModal');
+            if (event.target === modal) {
+                closeMapModal();
             }
         }
 
-        // Panggil fungsi saat halaman dimuat pertama kali
-        fetchStationData();
+        // Fitur Live Search Pencarian Lokasi Charger / Stasiun
+        document.getElementById('search-station').addEventListener('keyup', function(e) {
+            let keyword = e.target.value.toLowerCase();
+            let cards = document.querySelectorAll('.station-card');
 
-        // Fitur Auto-Refresh: Memperbarui data secara otomatis setiap 10 detik (Real-Time FR-02)
-        setInterval(fetchStationData, 10000);
+            cards.forEach(function(card) {
+                let name = card.getAttribute('data-name');
+                let address = card.getAttribute('data-address');
+
+                if (name.includes(keyword) || address.includes(keyword)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
     </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\OperatorController; // <-- 1. Jangan lupa diimport di atas
 
 Route::get('/', function () {
     return redirect('/login');
@@ -15,22 +15,8 @@ Route::post('/login', [AuthController::class, 'login']);
 // Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Halaman Dashboard yang dijaga session manual
-Route::get('/dashboard', function () {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
-    return view('dashboard');
-});
+// Halaman Dashboard Operator (Wajib ada agar route('operator.dashboard') tidak error)
+Route::get('/operator/dashboard', [OperatorController::class, 'index'])->name('operator.dashboard');
 
-// Halaman Dashboard Operator (juga dijaga session)
-Route::get('/operator/dashboard', function () {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
-    return view('operator.dashboard');
-});
-
-Route::get('/stations/{id}/view', function ($id) {
-    return view('operator.lokasi_stasiun', ['id' => $id]);
-});
+// Halaman Detail Lokasi Stasiun
+Route::get('/operator/lokasi_stasiun', [OperatorController::class, 'lokasiStasiun'])->name('operator.lokasi_stasiun');
