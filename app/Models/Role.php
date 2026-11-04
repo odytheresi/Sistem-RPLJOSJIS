@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\HakAkses;
 
 class Role extends Model
 {
@@ -19,6 +20,6 @@ class Role extends Model
 
     public function hakAkses(): HasMany
     {
-        return $this->hasMany(hak_akses::class, 'id_role', 'id_role');
+        return $this->hasMany(HakAkses::class, 'id_role', 'id_role');
     }
 }

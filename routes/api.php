@@ -1,36 +1,33 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
 Route::post('login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
+// NFR-01: semua route di bawah wajib token valid + sesi masih aktif
+Route::middleware(['auth:sanctum', 'sesi.aktif'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
+    Route::get('user', fn (Request $r) => $r->user());
+    Route::get('me/hak-akses', [MeController::class, 'hakAkses']);
+
+    // NFR-01: tiap route admin dicek fitur + aksinya
+    Route::prefix('admin')->group(function () {
+        Route::get('ringkasan', [AdminController::class, 'ringkasan'])->middleware('akses:dashboard,lihat');
+
+        Route::get('user',           [AdminController::class, 'user'])->middleware('akses:manajemen_user,lihat');
+        Route::put('user/{id}/role', [AdminController::class, 'ubahRoleUser'])->middleware('akses:manajemen_user,ubah');
+
+        Route::get('role',                [AdminController::class, 'role'])->middleware('akses:role_hak_akses,lihat');
+        Route::get('role/{id}/hak-akses', [AdminController::class, 'hakAksesRole'])->middleware('akses:role_hak_akses,lihat');
+        Route::put('role/{id}/hak-akses', [AdminController::class, 'simpanHakAkses'])->middleware('akses:role_hak_akses,ubah');
+        Route::put('role/{id}/status',    [AdminController::class, 'ubahStatusRole'])->middleware('akses:role_hak_akses,ubah');
+
+        Route::get('audit-log', [AdminController::class, 'auditLog'])->middleware('akses:audit_log,lihat');
+
+        // konfigurasi & notifikasi: menyusul setelah struktur tabelnya jelas
+    });
 });
-
-Route::middleware(['auth:sanctum', 'akses:manajemen_user,lihat'])
-    ->get('/test/admin', function () {
-        return response()->json([
-            'message' => 'Akses Admin berhasil.',
-        ]);
-    });
-
-Route::middleware(['auth:sanctum', 'akses:charger,lihat'])
-    ->get('/test/operator', function () {
-        return response()->json([
-            'message' => 'Akses Operator berhasil.',
-        ]);
-    });
-
-Route::middleware(['auth:sanctum', 'akses:kendaraan,lihat'])
-    ->get('/test/pengemudi', function () {
-        return response()->json([
-            'message' => 'Akses Pengemudi berhasil.',
-        ]);
-    });

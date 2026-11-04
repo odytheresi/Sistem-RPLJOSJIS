@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Audit_Log extends Model
 {
@@ -10,11 +11,11 @@ class Audit_Log extends Model
     protected $primaryKey = 'id_audit';
     public $timestamps = false;
 
-    protected $fillable = ['user_id', 'aktivitas', 'entitas_terkait', 'id_referensi', 'waktu', 'keterangan'];
+    protected $fillable = ['id_user', 'aktivitas', 'entitas_terkait', 'id_referensi', 'waktu', 'keterangan'];
     protected $casts = ['waktu' => 'datetime'];
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id', 'id_user');
+        return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 }

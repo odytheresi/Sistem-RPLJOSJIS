@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
+use App\Models\Audit_Log;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -80,8 +80,8 @@ abstract class CrudController extends Controller
 
     protected function catat(string $aktivitas, Model $record): void
     {
-        AuditLog::create([
-            'user_id' => Auth::id(),
+        Audit_Log::create([
+            'id_user' => Auth::id(),
             'aktivitas' => $aktivitas,
             'entitas_terkait' => class_basename($record),
             'id_referensi' => (string) $record->getKey(),
