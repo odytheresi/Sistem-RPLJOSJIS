@@ -3,17 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\Keluhan;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class KeluhanController extends Controller
 {
+    /*
+    |--------------------------------------------------------------------------
+    | INDEX - Daftar Keluhan Pengemudi
+    |--------------------------------------------------------------------------
+    */
+
     public function index(): View
     {
         $operator = auth()->user()->operator;
 
+        abort_unless($operator, 403);
+
+        // Mengambil keluhan hanya dari stasiun milik operator login.
         $keluhan = Keluhan::with('station')
+            ->whereNotNull('id_pengemudi')
             ->whereHas('station', function ($query) use ($operator) {
                 $query->where(
                     'id_operator',
@@ -29,13 +37,19 @@ class KeluhanController extends Controller
         );
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW - Detail Keluhan
+    |--------------------------------------------------------------------------
+    */
+
     public function show(Keluhan $keluhan): View
     {
         $this->checkOwner($keluhan);
 
         $keluhan->load([
-            'station',
-            'perbaikan.charger'
+            'station'
         ]);
 
         return view(
@@ -44,37 +58,25 @@ class KeluhanController extends Controller
         );
     }
 
-    public function updateStatus(
-        Request $request,
-        Keluhan $keluhan
-    ): RedirectResponse {
 
-        $this->checkOwner($keluhan);
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK OWNER - Pemeriksaan Kepemilikan Keluhan
+    |--------------------------------------------------------------------------
+    */
 
-        $validated = $request->validate([
-            'status' => [
-                'required',
-                'in:menunggu,diproses,selesai,ditolak'
-            ],
-        ]);
-
-        $keluhan->update([
-            'status' => $validated['status']
-        ]);
-
-        return back()->with(
-            'success',
-            'Status keluhan berhasil diperbarui.'
-        );
-    }
-
-    private function checkOwner(
-        Keluhan $keluhan
-    ): void {
+    private function checkOwner(Keluhan $keluhan): void
+    {
+        $operator = auth()->user()->operator;
 
         abort_unless(
-            $keluhan->station->id_operator ===
-            auth()->user()->operator->id_operator,
+            $operator &&
+            $keluhan->station()
+                ->where(
+                    'id_operator',
+                    $operator->id_operator
+                )
+                ->exists(),
             403
         );
     }

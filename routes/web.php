@@ -27,12 +27,13 @@ Route::middleware(['auth', 'operator'])
 
         Route::resource('tarif', TarifController::class)->except(['show']);
 
-        Route::get('/keluhan', [KeluhanController::class, 'index'])
-            ->name('keluhan.index');
+       Route::get('/keluhan', [KeluhanController::class, 'index'])
+        ->name('keluhan.index');
+
         Route::get('/keluhan/{keluhan}', [KeluhanController::class, 'show'])
-            ->name('keluhan.show');
-        Route::patch('/keluhan/{keluhan}/status', [KeluhanController::class, 'updateStatus'])
-            ->name('keluhan.status');
+        ->name('keluhan.show');
+
+    
 
         Route::resource('perbaikan', PerbaikanController::class);
     });
