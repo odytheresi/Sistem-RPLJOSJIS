@@ -125,6 +125,62 @@ class AdminController extends Controller
         return response()->json(['message' => 'Status role diperbarui.']);
     }
 
+    // ---------- Laporan ----------
+        public function laporan(Request $request): JsonResponse
+        {
+            $request->validate([
+                'dari'   => 'nullable|date',
+                'sampai' => 'nullable|date|after_or_equal:dari',
+            ]);
+
+            $dari   = $request->input('dari', now()->subDays(29)->toDateString());
+            $sampai = $request->input('sampai', today()->toDateString());
+
+            $log = fn () => Audit_Log::whereDate('waktu', '>=', $dari)
+                                    ->whereDate('waktu', '<=', $sampai);
+
+            return response()->json([
+                'periode'         => compact('dari', 'sampai'),
+                'total_aktivitas' => $log()->count(),
+                'per_aktivitas'   => $log()->select('aktivitas', DB::raw('count(*) as total'))
+                                        ->groupBy('aktivitas')->orderByDesc('total')->get(),
+                'per_hari'        => $log()->select(DB::raw('DATE(waktu) as tanggal'), DB::raw('count(*) as total'))
+                                        ->groupBy('tanggal')->orderBy('tanggal')->get(),
+                'user_teraktif'   => $log()->select('id_user', DB::raw('count(*) as total'))
+                                        ->groupBy('id_user')->with('user:id_user,identifier')
+                                        ->orderByDesc('total')->limit(10)->get(),
+                'user_per_role'   => Role::withCount('users')->get()
+                                        ->map(fn ($r) => ['role' => $r->nma_role, 'total' => $r->users_count]),
+            ]);
+        }
+
+        public function laporanCsv(Request $request)
+        {
+            $request->validate([
+                'dari'   => 'required|date',
+                'sampai' => 'required|date|after_or_equal:dari',
+            ]);
+
+            $this->catat($request, 'ekspor_laporan', 'Laporan', $request->dari . '_' . $request->sampai);
+
+            return response()->streamDownload(function () use ($request) {
+                $out = fopen('php://output', 'w');
+                fputcsv($out, ['Waktu', 'User', 'Aktivitas', 'Entitas', 'ID Referensi', 'Keterangan']);
+
+                Audit_Log::with('user')
+                    ->whereDate('waktu', '>=', $request->dari)
+                    ->whereDate('waktu', '<=', $request->sampai)
+                    ->chunkById(500, function ($rows) use ($out) {
+                        foreach ($rows as $l) {
+                            fputcsv($out, [$l->waktu, $l->user->identifier ?? '-', $l->aktivitas,
+                                $l->entitas_terkait, $l->id_referensi, $l->keterangan]);
+                        }
+                    }, 'id_audit');
+
+                fclose($out);
+            }, "laporan-aktivitas-{$request->dari}-{$request->sampai}.csv", ['Content-Type' => 'text/csv']);
+        }
+
     // ---------- Audit log (FR-13) ----------
     public function auditLog(Request $request): JsonResponse
     {
@@ -143,7 +199,11 @@ class AdminController extends Controller
         if ($request->filled('sampai')) {
             $q->whereDate('waktu', '<=', $request->sampai);
         }
+        if ($request->filled('tanggal')) {
+            $q->whereDate('waktu', $request->tanggal);
+        }   
 
         return response()->json($q->paginate(20));
     }
+
 }

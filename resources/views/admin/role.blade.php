@@ -1,7 +1,7 @@
 @extends('layouts.admin')
-@section('title', 'Role & hak akses')
+@section('title', 'Hak Akses')
 @section('menu', 'role_hak_akses')
-@section('subtitle', 'Kelola role dan hak akses fitur per role.')
+@section('subtitle', 'Kelola hak akses fitur per role.')
 
 @section('content')
 <div class="card border-0 shadow-sm">

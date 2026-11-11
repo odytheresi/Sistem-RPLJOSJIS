@@ -1,0 +1,63 @@
+services:
+  # Aplikasi Laravel (PHP)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-app
+    working_dir: /var/www/html
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+    environment:
+      # Di dalam container, "127.0.0.1" menunjuk ke container itu sendiri,
+      # jadi host database harus diganti ke nama service "db".
+      # Nilai lain (DB_DATABASE, DB_USERNAME, DB_PASSWORD) tetap dibaca dari .env
+      DB_HOST: db
+      DB_PORT: 3306
+    command: >
+      sh -c "php artisan migrate 
+      --force && php artisan serve 
+      --host=0.0.0.0 --port=8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Vite (untuk CSS/JS Tailwind) - jalan terus saat development
+  node:
+    image: node:22-alpine
+    container_name: laravel-vite
+    working_dir: /var/www/html
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/var/www/html
+      # node_modules disimpan di volume Docker, bukan di folder Windows
+      - node_modules:/var/www/html/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    restart: unless-stopped
+
+  # Database MySQL (sesuai .env: admin_db, user root, tanpa password)
+  db:
+    image: mysql:8.0
+    container_name: laravel-db
+    environment:
+      MYSQL_DATABASE: admin_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      # Port 3307 di komputer Anda, supaya tidak bentrok dengan MySQL lokal (XAMPP, dll.)
+      - "3307:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  node_modules:

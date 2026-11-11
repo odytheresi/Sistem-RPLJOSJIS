@@ -144,6 +144,14 @@ class HakAksesSeeder extends Seeder
                 'ubah' => true,
                 'hapus' => true,
             ],
+            [
+                'id_role' => $roles['admin'],
+                'nm_fitur' => 'laporan',
+                'lihat' => true,
+                'tambah' => false,
+                'ubah' => false,
+                'hapus' => false,
+            ],
 
             // =========================
             // OPERATOR

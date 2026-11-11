@@ -18,6 +18,40 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
         rel="stylesheet"
     >
+
+    <style>
+        /* Palet: Persimmon #E1932C | Cornsilk #F0DF87 | Glacier #A0CED9 | Malachite #3D9E71 | Deep Atlantic #133968 */
+        :root {
+            --bs-success: #3D9E71; --bs-success-rgb: 61, 158, 113;   /* hijau  -> Malachite */
+            --bs-danger:  #E1932C; --bs-danger-rgb: 225, 147, 44;    /* merah  -> Persimmon */
+            --bs-dark:    #133968; --bs-dark-rgb: 19, 57, 104;       /* panel kiri -> Deep Atlantic */
+            --bs-light:   #F0DF87; --bs-light-rgb: 240, 223, 135;    /* latar halaman -> Cornsilk */
+        }
+
+        /* Panel kiri */
+        .bg-dark .text-success { color: #F0DF87 !important; }
+        .bg-dark .bg-success.bg-opacity-25 { background-color: rgba(240, 223, 135, .2) !important; }
+        .bg-dark .text-white-50 { color: #A0CED9 !important; }
+
+        /* Tombol & input */
+        .btn-success {
+            --bs-btn-bg: #3D9E71; --bs-btn-border-color: #3D9E71;
+            --bs-btn-hover-bg: #133968; --bs-btn-hover-border-color: #133968;
+            --bs-btn-active-bg: #133968; --bs-btn-active-border-color: #133968;
+            --bs-btn-disabled-bg: #3D9E71; --bs-btn-disabled-border-color: #3D9E71;
+            --bs-btn-focus-shadow-rgb: 61, 158, 113;
+        }
+        .btn-outline-success {
+            --bs-btn-color: #3D9E71; --bs-btn-border-color: #3D9E71;
+            --bs-btn-hover-bg: #3D9E71; --bs-btn-hover-border-color: #3D9E71;
+            --bs-btn-active-bg: #3D9E71; --bs-btn-active-border-color: #3D9E71;
+            --bs-btn-focus-shadow-rgb: 61, 158, 113;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #3D9E71;
+            box-shadow: 0 0 0 .25rem rgba(61, 158, 113, .25);
+        }
+    </style>
 </head>
 
 <body class="bg-light">

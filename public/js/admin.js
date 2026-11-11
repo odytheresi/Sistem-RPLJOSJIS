@@ -91,6 +91,8 @@ const MENU = [
     { fitur: 'dashboard',      label: 'Dashboard',        icon: 'bi-speedometer2', href: '/admin/dashboard' },
     { fitur: 'manajemen_user', label: 'Manajemen user',   icon: 'bi-people',       href: '/admin/user' },
     { fitur: 'role_hak_akses', label: 'Role & hak akses', icon: 'bi-shield-lock',  href: '/admin/role' },
+    { fitur: 'konfigurasi_sistem', label: 'Konfigurasi sistem', icon: 'bi-gear',              href: '/admin/konfigurasi' },
+    { fitur: 'laporan',            label: 'Laporan',            icon: 'bi-file-earmark-text', href: '/admin/laporan' },
     { fitur: 'audit_log',      label: 'Audit log',        icon: 'bi-journal-text', href: '/admin/audit-log' },
 ];
 

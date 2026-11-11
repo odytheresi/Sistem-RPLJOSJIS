@@ -9,10 +9,18 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
+        /* Palet: Persimmon #E1932C | Cornsilk #F0DF87 | Glacier #A0CED9 | Malachite #3D9E71 | Deep Atlantic #133968 */
+        :root {
+            --bs-success: #3D9E71; --bs-success-rgb: 61, 158, 113;   /* avatar, hijau   -> Malachite */
+            --bs-danger:  #E1932C; --bs-danger-rgb: 225, 147, 44;    /* Logout, merah   -> Persimmon */
+            --bs-dark:    #133968; --bs-dark-rgb: 19, 57, 104;       /* sidebar         -> Deep Atlantic */
+            --bs-light:   #F0DF87; --bs-light-rgb: 240, 223, 135;    /* latar halaman   -> Cornsilk */
+        }
+
         #sidebar { width: 220px; }
-        .sidebar-link { color: #adb5bd; border-radius: .5rem; transition: .2s; }
-        .sidebar-link:hover { color: #fff; background: rgba(255, 255, 255, .08); }
-        .sidebar-link.active { color: #fff; background: #198754; }
+        .sidebar-link { color: #A0CED9; border-radius: .5rem; transition: .2s; }
+        .sidebar-link:hover { color: #fff; background: rgba(160, 206, 217, .2); }
+        .sidebar-link.active { color: #fff; background: #3D9E71; }
         .table td, .table th { vertical-align: middle; }
 
         @media (min-width: 992px) {
@@ -20,6 +28,8 @@
             .content { margin-left: 220px; }
         }
     </style>
+
+    
 </head>
 
 <body class="bg-light" data-menu="@yield('menu')">
