@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sistem-rpljosjis-app
+    container_name: laravel_app
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - db
+
+  vite:
+    image: sistem-rpljosjis-app
+    container_name: vite_container
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: db_rpl_josjis
+      MYSQL_ROOT_PASSWORD: rahasia
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

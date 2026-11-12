@@ -2,31 +2,32 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    protected $table = 'login';
+    protected $primaryKey = 'user_id';
+    public $timestamps = false;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $fillable = ['id_role', 'nma_user', 'no_hp', 'email', 'pass', 'status'];
+    protected $hidden = ['pass'];
+
+    // Laravel membaca password dari kolom "pass"
+    public function getAuthPassword()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->pass;
+    }
+
+    // Tabel login tidak punya kolom remember_token
+    public function getRememberTokenName()
+    {
+        return '';
+    }
+
+    public function operator(): HasOne
+    {
+        return $this->hasOne(Operator::class, 'id_user', 'user_id');
     }
 }

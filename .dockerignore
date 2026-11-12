@@ -1,0 +1,17 @@
+# Abaikan folder dependensi dan log
+node_modules
+npm-debug.log
+
+# Abaikan file konfigurasi Docker agar tidak masuk ke dalam image
+Dockerfile
+docker-compose.yml
+
+# Abaikan file Git
+.git
+.gitignore
+
+# Abaikan file hot-reload Vite/Laravel (sesuai instruksi Anda)
+public/hot
+
+# Abaikan environment variables lokal (biar aman)
+.env

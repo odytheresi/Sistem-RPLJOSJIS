@@ -3,28 +3,60 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Charger extends Model
 {
     protected $table = 'charger';
+
     protected $primaryKey = 'id_charger';
-    protected $guarded = [];
 
-    // Relasi ke Charging Station (menggunakan id_station sesuai ERD)
-    public function chargingStation()
+    protected $fillable = [
+        'id_station',
+        'id_konektor',
+        'kd_charger',
+        'daya_maks',
+        'status',
+    ];
+
+    protected $casts = [
+        'daya_maks' => 'integer',
+    ];
+
+    public function station(): BelongsTo
     {
-        return $this->belongsTo(ChargingStation::class, 'id_station', 'id_station');
+        return $this->belongsTo(
+            ChargingStation::class,
+            'id_station',
+            'id_station'
+        );
     }
 
-    // Relasi ke Tipe Konektor (menggunakan id_konektor sesuai ERD)
-    public function tipeKonektor()
+    public function konektor(): BelongsTo
     {
-        return $this->belongsTo(TipeKonektor::class, 'id_konektor', 'id_konektor');
+        return $this->belongsTo(
+            TipeKonektor::class,
+            'id_konektor',
+            'id_konektor'
+        );
     }
 
-    // Relasi ke Tarif
-    public function tarifs()
+    public function tarifs(): HasMany
     {
-        return $this->hasMany(Tarif::class, 'id_charger', 'id_charger');
+        return $this->hasMany(
+            Tarif::class,
+            'id_charger',
+            'id_charger'
+        );
+    }
+
+    public function perbaikan(): HasMany
+    {
+        return $this->hasMany(
+            Perbaikan::class,
+            'id_charger',
+            'id_charger'
+        );
     }
 }

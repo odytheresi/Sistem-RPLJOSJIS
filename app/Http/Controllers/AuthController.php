@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\login; 
+use App\Models\Login;
 
 class AuthController extends Controller
 {
@@ -23,7 +23,7 @@ class AuthController extends Controller
         $fieldType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'nma_user';
 
         // Cari user di database
-        $user = login::where($fieldType, $request->login)->first();
+        $user = Login::where($fieldType, $request->login)->first();
 
         // Cek apakah user ada dan password teks biasa-nya cocok
         if ($user && $user->pass === $request->pass) {

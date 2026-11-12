@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Tarif extends Model
 {
-    protected $table = 'tarifs'; // Diubah dari 'tarif' menjadi 'tarifs'
-    protected $primaryKey = 'id_tarif';
-    protected $guarded = [];
+    protected $table = 'tarifs';
 
-    // Relasi ke tabel charger
-    public function charger()
+    protected $fillable = ['id_charger', 'harga_per_kWh', 'berlaku_mulai'];
+
+    public function charger(): BelongsTo
     {
         return $this->belongsTo(Charger::class, 'id_charger', 'id_charger');
     }

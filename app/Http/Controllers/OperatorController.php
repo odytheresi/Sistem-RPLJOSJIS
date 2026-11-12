@@ -2,61 +2,171 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\ChargingStation;
-use App\Models\Charger;
-use App\Models\Tarif; // (Opsional) Uncomment jika tabel tarifs sudah dibuat
+use App\Models\Operator;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
-class OperatorController extends Controller 
+class OperatorController extends Controller
 {
-    public function index() 
+    public function index(): View|RedirectResponse
     {
-        // Opsional: Validasi session login manual if
-        if (!session()->has('user_id')) {
+        // Login proyek ini memakai sesi manual
+        $userId = session('user_id');
+
+        if (!$userId) {
             return redirect('/login');
         }
 
-        // Data identitas operator yang sedang login
+        $op = Operator::where('id_user', $userId)->first();
+
+        if (!$op) {
+            return redirect('/login')->withErrors([
+                'login' => 'Akun ini belum terdaftar sebagai operator.',
+            ]);
+        }
+
         $operator = [
-            'id_operator' => session('user_id', 1),
-            'nama'        => session('nama', 'Budi Santoso'),
-            'user_id'     => session('user_id', 1)
+            'id_operator' => $op->id_operator,
+            'nama'        => $op->nama_operator ?: 'Operator',
+            'no_hp'       => $op->no_hp,
         ];
 
-        // 1. Logika Hitung Data
-        $totalStation        = ChargingStation::count();
-        $totalCharger        = Charger::count();
-        $chargerAktif        = Charger::where('status', 'aktif')->count();
-        $chargerNonaktif     = Charger::where('status', 'nonaktif')->count();
-        $chargerMaintenance  = Charger::where('status', 'maintenance')->count();
-        // $totalTarif       = Tarif::count(); // Dinonaktifkan sementara
+        // ===== Stasiun =====
+        $stationRows = DB::table('charging_station')
+            ->where('id_operator', $op->id_operator)
+            ->orderBy('id_station')
+            ->get();
 
-        // 2. Data Tambahan untuk Mengisi Tabel di View Anda
-        $chargingStations = ChargingStation::all();
-        $chargers         = Charger::with(['chargingStation', 'tipeKonektor'])->get();
-        $tarifs        = Tarif::with('charger')->get(); // Dinonaktifkan sementara
-        $keluhan          = []; 
+        $stationIds = $stationRows->pluck('id_station');
 
-        // Kirim semua variabel ke view operator.dashboard
+        $chargingStations = $stationRows->map(fn ($s) => [
+            'id'         => $s->id_station,
+            'id_station' => $s->id_station,
+            'nama_st'    => $s->nama_st,
+            'alamat'     => $s->alamat,
+            'status'     => $s->status,
+        ])->values();
+
+        // ===== Charger =====
+        $chargers = DB::table('charger')
+            ->join('charging_station', 'charger.id_station', '=', 'charging_station.id_station')
+            ->leftJoin('tipe_konektor', 'charger.id_konektor', '=', 'tipe_konektor.id_konektor')
+            ->whereIn('charger.id_station', $stationIds)
+            ->select(
+                'charger.id_charger',
+                'charger.kd_charger',
+                'charger.daya_maks',
+                'charger.status',
+                'charging_station.nama_st',
+                'tipe_konektor.nm_konektor'
+            )
+            ->orderBy('charger.id_charger')
+            ->get()
+            ->map(fn ($c) => [
+                'id_charger'       => $c->id_charger,
+                'kd_charger'       => $c->kd_charger,
+                'daya_maks'        => $c->daya_maks,
+                'status'           => $c->status,
+                'charging_station' => ['nama_st' => $c->nama_st],
+                'tipe_konektor'    => ['nm_konektor' => $c->nm_konektor],
+            ])->values();
+
+        // ===== Tarif =====
+        $tarifs = DB::table('tarifs')
+            ->join('charger', 'tarifs.id_charger', '=', 'charger.id_charger')
+            ->join('charging_station', 'charger.id_station', '=', 'charging_station.id_station')
+            ->whereIn('charger.id_station', $stationIds)
+            ->select(
+                'tarifs.id',
+                'tarifs.harga_per_kWh',
+                'tarifs.berlaku_mulai',
+                'charging_station.nama_st'
+            )
+            ->orderBy('tarifs.id')
+            ->get()
+            ->map(fn ($t) => [
+                'id'            => $t->id,
+                'harga_per_kWh' => $t->harga_per_kWh,
+                'berlaku_mulai' => $t->berlaku_mulai,
+                'charger'       => [
+                    'charging_station' => ['nama_st' => $t->nama_st],
+                ],
+            ])->values();
+
+        // ===== Keluhan =====
+        $keluhan = DB::table('keluhan')
+            ->leftJoin('charging_station', 'keluhan.id_station', '=', 'charging_station.id_station')
+            ->leftJoin('pengemudi', 'keluhan.id_pengemudi', '=', 'pengemudi.id_pengemudi')
+            ->leftJoin('login', 'pengemudi.user_id', '=', 'login.user_id')
+            ->whereIn('keluhan.id_station', $stationIds)
+            ->select(
+                'keluhan.created_at',
+                'keluhan.isi_keluhan',
+                'keluhan.status',
+                'charging_station.nama_st',
+                'login.nma_user'
+            )
+            ->orderByDesc('keluhan.created_at')
+            ->limit(10)
+            ->get()
+            ->map(fn ($k) => [
+                'tanggal'   => $k->created_at ? Carbon::parse($k->created_at)->format('d/m/Y') : '-',
+                'stasiun'   => $k->nama_st ?? '-',
+                'pengemudi' => $k->nma_user ?? '-',
+                'keluhan'   => $k->isi_keluhan ?? '-',
+                'status'    => $k->status,
+            ])->values();
+
+        // ===== Angka statistik =====
+        $perStatus = DB::table('charger')
+            ->whereIn('id_station', $stationIds)
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $totalStation       = $stationIds->count();
+        $totalCharger       = (int) $perStatus->sum();
+        $chargerAktif       = (int) ($perStatus['tersedia'] ?? 0) + (int) ($perStatus['digunakan'] ?? 0);
+        $chargerNonaktif    = (int) ($perStatus['error'] ?? 0);
+        $chargerMaintenance = (int) ($perStatus['perbaikan'] ?? 0);
+
         return view('operator.dashboard', compact(
             'operator',
+            'chargingStations',
+            'chargers',
+            'tarifs',
+            'keluhan',
             'totalStation',
             'totalCharger',
             'chargerAktif',
             'chargerNonaktif',
-            'chargerMaintenance',
-            //'totalTarif',
-            'chargingStations',
-            'chargers',
-            'tarifs',
-            'keluhan'
+            'chargerMaintenance'
         ));
     }
 
-    public function lokasiStasiun()
+    public function lokasiStasiun(): View|RedirectResponse
     {
-        // Mengambil semua data stasiun beserta relasi chargers dan tipe konektornya
-        $chargingStations = ChargingStation::with(['chargers.tipeKonektor', 'chargers.tarifs'])->get();
+        $userId = session('user_id');
+
+        if (!$userId) {
+            return redirect('/login');
+        }
+
+        $op = Operator::where('id_user', $userId)->first();
+
+        if (!$op) {
+            return redirect('/login')->withErrors([
+                'login' => 'Akun ini belum terdaftar sebagai operator.',
+            ]);
+        }
+
+        $chargingStations = ChargingStation::where('id_operator', $op->id_operator)
+            ->with(['chargers.konektor', 'chargers.tarifs'])
+            ->orderBy('id_station')
+            ->get();
 
         return view('operator.lokasi_stasiun', compact('chargingStations'));
     }
