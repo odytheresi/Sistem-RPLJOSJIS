@@ -74,6 +74,37 @@
             text-decoration: none;
             border-radius: 6px;
         }
+    
+        .alert-success {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+            border-left: 5px solid #059669;
+            padding: 14px 18px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .alert-danger {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+            border-left: 5px solid #dc2626;
+            padding: 14px 18px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
     </style>
 </head>
 
@@ -82,6 +113,20 @@
 <div class="container">
 
     <h2>Profil Pengemudi</h2>
+
+    {{-- Notifikasi berhasil --}}
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    {{-- Notifikasi gagal --}}
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="profile-item">
         <label>Nama Lengkap</label>
@@ -103,11 +148,13 @@
         <p>{{ $pengemudi->status }}</p>
     </div>
 
-    <a href="{{ route('pengemudi.profile.edit') }}" class="edit-button">
+    <a href="{{ route('pengemudi.profile.edit') }}"
+       class="edit-button">
         Edit Profil
-
     </a>
-    <a href="{{ route('pengemudi.dashboard') }}" class="back-button">
+
+    <a href="{{ route('pengemudi.dashboard') }}"
+       class="back-button">
         Kembali ke Dashboard
     </a>
 

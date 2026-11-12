@@ -272,14 +272,12 @@
         <!-- MENU UTAMA -->
         <div class="section-title"> Menu Utama </div>
         <div class="menu-grid">
-            <a href="#" class="menu-card">
-                <div class="menu-icon">⚡</div>
-                <div class="menu-title">
-                    Charging
-                </div>
-                <div class="menu-description">
-                    Cari dan mulai sesi charging kendaraan.
-                </div>
+            <a href="{{ route('pengemudi.charging.index') }}"
+                class="menu-card"
+                style="text-decoration: none; color: inherit;">
+                <div class="icon">⚡</div>
+                    <h3>Charging</h3>
+                <p>Cari dan mulai sesi charging kendaraan.</p>
             </a>
 
             <a href="#" class="menu-card">
@@ -308,6 +306,13 @@
                 <div class="menu-description">
                     Kelola informasi akun dan kendaraan.
                 </div>
+            </a>
+
+            <a href="{{ route('pengemudi.kendaraan.index') }}"
+                class="menu-card">
+            <div class="menu-icon">🚗</div>
+            <h3>Kendaraan Saya</h3>
+            <p>Kelola data kendaraan kamu.</p>
             </a>
         </div>
 

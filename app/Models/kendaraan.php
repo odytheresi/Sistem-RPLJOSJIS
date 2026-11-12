@@ -1,13 +1,13 @@
 <?php
 
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
-class kendaraan extends Model
+class Kendaraan extends Model
 {
     protected $table = 'kendaraans';
     protected $primaryKey = 'id_kendaraan';
+
     public $incrementing = true;
     protected $keyType = 'int';
     public $timestamps = false;
@@ -20,9 +20,6 @@ class kendaraan extends Model
         'kapasitas_baterai',
     ];
 
-    /**
-     * Relasi ke pengemudi pemilik kendaraan.
-     */
     public function pengemudi()
     {
         return $this->belongsTo(
