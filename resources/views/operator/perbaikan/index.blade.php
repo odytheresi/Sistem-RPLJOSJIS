@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Maintenance Charger - EVChargeHub</title>
     <style>
-    :root { --green: #3d9e71; --green-dark: #2f7d59; --text: #172033; --muted: #8390a5; --line: #e7ecf3; }
+    :root { --green: #3d9e71; --green-dark: #2f7d59; --green-soft: #e0f1e8; --text: #172033; --muted: #8390a5; --line: #e7ecf3; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fb; color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
     a { color: var(--green); text-decoration: none; }
@@ -15,7 +15,7 @@
     .sidebar h1 { font-size: 18px; margin-bottom: 4px; }
     .sidebar .subtitle { font-size: 12px; color: #d4eee1; margin-bottom: 32px; }
     .sidebar nav a {
-        display: block; color: #e6f5ed; text-decoration: none; padding: 12px 14px; border-radius: 10px;
+        display: block; color: #e6f5ed; padding: 12px 14px; border-radius: 10px;
         margin-bottom: 10px; font-size: 14px; background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.18); transition: background 0.2s, transform 0.2s;
     }
@@ -24,15 +24,13 @@
 
     /* ===== MAIN & TOPBAR ===== */
     .main { flex: 1; padding: 28px 32px; overflow-x: auto; min-width: 0; }
-    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
-    .topbar h2 { font-size: 22px; font-weight: 800; color: var(--text); }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+    .topbar h2 { font-size: 22px; font-weight: 800; }
     .topbar p { color: var(--muted); font-size: 12px; margin-top: 5px; }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .actions { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
     .actions form { margin: 0; display: inline; }
-    .section-title { font-size: 16px; font-weight: 800; margin: 0; }
-    .section-subtitle { color: var(--muted); font-size: 12px; margin-top: 5px; }
 
-    /* ===== BUTTON ===== */
+    /* ===== BUTTON & ALERT ===== */
     .btn {
         display: inline-block; padding: 9px 16px; border-radius: 9px; border: 1px solid transparent;
         font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer;
@@ -41,100 +39,68 @@
     .btn:hover { background: var(--green-dark); transform: translateY(-2px); color: #fff; }
     .btn-light { background: #fff; color: var(--text); border-color: var(--line); }
     .btn-light:hover { background: #f1f5f9; color: var(--text); }
-    .btn-warning { background: #f59e0b; color: #fff; }
-    .btn-warning:hover { background: #d97706; }
-    .btn-danger { background: #dc2626; color: #fff; }
-    .btn-danger:hover { background: #b91c1c; }
+    .btn-danger { background: #fff; color: #dc2626; border-color: #fecaca; }
+    .btn-danger:hover { background: #dc2626; color: #fff; }
     .btn-sm { padding: 6px 11px; font-size: 11px; }
-
-    /* ===== ALERT & NOTE ===== */
     .alert { padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; }
     .alert-success { background: #dcfce7; color: #166534; }
-    .alert-error { background: #fee2e2; color: #b91c1c; }
-    .alert ul { margin: 6px 0 0 18px; }
-    .note { display: flex; gap: 12px; padding: 16px; background: #eef8f2; border: 1px solid #cfe8da; border-radius: 12px; color: #2f7d59; font-size: 12px; margin-bottom: 18px; line-height: 1.6; }
 
-    /* ===== STAT CARD ===== */
-    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 17px; margin-bottom: 26px; }
-    .stat-card { background: white; border: 1px solid #e8edf4; border-radius: 15px; padding: 21px; box-shadow: 0 4px 16px #16274805; min-width: 0; }
-    .stat-icon { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 12px; font-size: 20px; }
-    .bg-green-soft { background: #e0f1e8; }
-    .bg-green { background: #dcfce7; }
-    .bg-orange { background: #ffedd5; }
-    .bg-blue { background: #dbeafe; }
-    .bg-gray { background: #f1f5f9; }
-    .stat-label { font-size: 12px; color: #77849a; font-weight: 600; margin-top: 17px; }
-    .stat-value { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin-top: 5px; color: var(--text); }
-    .stat-note { color: #98a2b3; font-size: 11px; margin-top: 5px; }
-
-    /* ===== PANEL & TABLE ===== */
+    /* ===== PANEL & TOOLBAR ===== */
     .dashboard-panel { background: white; border: 1px solid var(--line); border-radius: 15px; overflow: hidden; margin-bottom: 22px; }
-    .panel-header { padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #edf0f5; flex-wrap: wrap; }
-    .panel-body { padding: 22px; }
-    .panel-count { padding: 6px 10px; border-radius: 8px; background: #e0f1e8; color: var(--green-dark); font-size: 11px; font-weight: 700; }
+    .toolbar {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid #edf0f5;
+    }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+        display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px;
+        border: 1px solid var(--line); background: #fff; color: #475569; cursor: pointer;
+        font-size: 12px; font-weight: 700; font-family: inherit; transition: .2s;
+    }
+    .chip:hover { border-color: #a6d8bf; color: var(--text); }
+    .chip.active { border-color: var(--green); background: var(--green-soft); color: var(--green-dark); box-shadow: 0 0 0 3px #3d9e7118; }
+    .chip .n { min-width: 22px; padding: 1px 7px; border-radius: 10px; background: #f1f5f9; color: #64748b; font-size: 11px; text-align: center; }
+    .chip.active .n { background: #fff; color: var(--green-dark); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+    .dot.dijadwalkan { background: #94a3b8; }
+    .dot.proses { background: #3b82f6; }
+    .dot.selesai { background: #22c55e; }
+
+    .search { display: flex; align-items: center; gap: 12px; }
+    .search input {
+        width: 260px; max-width: 100%; padding: 9px 13px; border: 1px solid var(--line); border-radius: 10px;
+        font-size: 12px; font-family: inherit; outline: none; background: #fff; color: var(--text); transition: .2s;
+    }
+    .search input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
+    .search .count { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+    /* ===== TABLE ===== */
     .table-responsive { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
-    th { padding: 14px 18px; text-align: left; background: #f8fafc; color: #78869b; font-weight: 700; border-bottom: 1px solid #edf0f5; }
-    td { padding: 15px 18px; border-bottom: 1px solid #f0f2f6; color: #475569; vertical-align: middle; }
+    th { padding: 13px 18px; text-align: left; background: #f8fafc; color: #78869b; font-weight: 700; border-bottom: 1px solid #edf0f5; }
+    td { padding: 14px 18px; border-bottom: 1px solid #f0f2f6; color: #475569; vertical-align: middle; }
     tbody tr:last-child td { border-bottom: 0; }
     tbody tr:hover td { background: #fafcff; }
     td strong { color: var(--text); }
-    .hint { color: #98a2b3; font-size: 11px; }
+    .hint { color: #98a2b3; font-size: 11px; display: block; margin-top: 2px; }
+    .hint.late { color: #b91c1c; font-weight: 700; }
     .empty { text-align: center; color: #98a2b3; padding: 40px 20px !important; font-size: 13px; }
     .empty h4 { color: var(--text); font-size: 14px; margin: 8px 0 4px; }
-    .wrap-text { white-space: normal; min-width: 220px; }
 
     /* ===== BADGE ===== */
-    .badge { display: inline-block; padding: 5px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #64748b; text-transform: capitalize; }
-    .badge-lg { padding: 7px 14px; font-size: 11px; }
+    .badge { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #64748b; text-transform: capitalize; }
     .badge-menunggu { background: #ffedd5; color: #9a3412; }
     .badge-diproses, .badge-proses { background: #dbeafe; color: #1d4ed8; }
     .badge-selesai { background: #dcfce7; color: #166534; }
     .badge-ditolak, .badge-dibatalkan { background: #fee2e2; color: #b91c1c; }
     .badge-dijadwalkan { background: #e2e8f0; color: #475569; }
 
-    /* ===== DETAIL ===== */
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .info-item { padding: 16px; background: #f8faff; border: 1px solid #edf0f6; border-radius: 12px; }
-    .info-item.full { grid-column: 1 / -1; }
-    .info-label { font-size: 11px; color: #8290a5; font-weight: 600; margin-bottom: 6px; }
-    .info-value { font-size: 13px; font-weight: 700; color: var(--text); }
-    .content-box { padding: 20px; background: #f7f9fd; border: 1px solid #e7edf7; border-radius: 12px; line-height: 1.8; white-space: pre-line; color: #344563; font-size: 13px; }
-    .summary { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-    .summary h3 { font-size: 20px; font-weight: 800; margin: 12px 0 4px; }
-    .inline-status { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .inline-status select { width: auto; min-width: 180px; }
-
-    /* ===== FORM ===== */
-    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
-    .form-group label { font-weight: 700; font-size: 12px; color: #475569; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
-    .form-row .form-group { margin-bottom: 0; }
-    .form-control {
-        padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px;
-        font-family: inherit; background: #fff; color: var(--text); outline: none; transition: .2s; width: 100%;
-    }
-    textarea.form-control { min-height: 110px; resize: vertical; }
-    .form-control:focus { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
-    .form-control.is-invalid { border-color: #dc2626; }
-    .form-text { color: #98a2b3; font-size: 11px; }
-    .field-error { color: #b91c1c; font-size: 11px; }
-    .form-section { font-weight: 800; font-size: 14px; margin: 4px 0 14px; color: #263c65; }
-    .divider { border: 0; border-top: 1px solid #edf0f6; margin: 22px 0; }
-    .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; padding-top: 20px; border-top: 1px solid #edf0f6; }
-    .required { color: #dc2626; }
-
-    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 900px) {
         body { flex-direction: column; }
         .sidebar { width: 100%; }
         .main { padding: 22px 18px; }
     }
-    @media (max-width: 640px) {
-        .stats-grid, .info-grid, .form-row { grid-template-columns: 1fr; }
-        .form-actions { flex-direction: column-reverse; }
-        .form-actions .btn { width: 100%; text-align: center; }
-    }
+    @media (max-width: 640px) { .search, .search input { width: 100%; } }
 </style>
 </head>
 <body>
@@ -171,47 +137,27 @@
             <div class="alert alert-success">✅ {{ session('success') }}</div>
         @endif
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon bg-green-soft">🛠️</div>
-                <div class="stat-label">Total Maintenance</div>
-                <div class="stat-value">{{ $total }}</div>
-                <div class="stat-note">Seluruh jadwal</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-gray">📅</div>
-                <div class="stat-label">Dijadwalkan</div>
-                <div class="stat-value">{{ $dijadwalkan }}</div>
-                <div class="stat-note">Menunggu pelaksanaan</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-blue">🔄</div>
-                <div class="stat-label">Dalam Proses</div>
-                <div class="stat-value">{{ $proses }}</div>
-                <div class="stat-note">Sedang diperbaiki</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon bg-green">✅</div>
-                <div class="stat-label">Selesai</div>
-                <div class="stat-value">{{ $selesai }}</div>
-                <div class="stat-note">Maintenance selesai</div>
-            </div>
-        </div>
-
         <section class="dashboard-panel">
-            <div class="panel-header">
-                <div>
-                    <h3 class="section-title">Daftar Maintenance</h3>
-                    <div class="section-subtitle">Informasi jadwal dan status perbaikan charger.</div>
+
+            {{-- Ringkasan sekaligus filter status + pencarian cepat (di halaman) --}}
+            <div class="toolbar">
+                <div class="chips" id="chips">
+                    <button type="button" class="chip active" data-filter="semua">Semua <span class="n">{{ $total }}</span></button>
+                    <button type="button" class="chip" data-filter="dijadwalkan"><span class="dot dijadwalkan"></span>Dijadwalkan <span class="n">{{ $dijadwalkan }}</span></button>
+                    <button type="button" class="chip" data-filter="proses"><span class="dot proses"></span>Dalam Proses <span class="n">{{ $proses }}</span></button>
+                    <button type="button" class="chip" data-filter="selesai"><span class="dot selesai"></span>Selesai <span class="n">{{ $selesai }}</span></button>
                 </div>
-                <span class="panel-count">{{ $total }} jadwal</span>
+                <div class="search">
+                    <span class="count" id="rowCount">{{ $total }} jadwal</span>
+                    <input type="text" id="searchMaintenance" placeholder="🔍 Cari charger, stasiun, jenis...">
+                </div>
             </div>
+
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
                             <th>Charger</th>
-                            <th>Lokasi Stasiun</th>
                             <th>Jenis Maintenance</th>
                             <th>Tanggal Jadwal</th>
                             <th>Status</th>
@@ -220,19 +166,28 @@
                     </thead>
                     <tbody>
                         @forelse ($perbaikan as $item)
-                            <tr>
+                            @php
+                                $tglJadwal = \Carbon\Carbon::parse($item->tgl_jadwal);
+                                $terlambat = $item->status === 'dijadwalkan' && $tglJadwal->lt(today());
+                            @endphp
+                            <tr class="maint-row" data-status="{{ $item->status }}"
+                                data-search="{{ strtolower(($item->charger->kd_charger ?? '') . ' ' . ($item->charger->station->nama_st ?? '') . ' ' . ($item->charger->konektor->nm_konektor ?? '') . ' ' . $item->jenis_maintenance . ' ' . $item->status) }}">
                                 <td>
                                     <strong>{{ $item->charger->kd_charger ?? '-' }}</strong>
-                                    <div class="hint">{{ $item->charger->konektor->nm_konektor ?? '-' }}</div>
+                                    <span class="hint">{{ $item->charger->station->nama_st ?? '-' }} · {{ $item->charger->konektor->nm_konektor ?? '-' }}</span>
                                 </td>
-                                <td>{{ $item->charger->station->nama_st ?? '-' }}</td>
                                 <td>{{ $item->jenis_maintenance }}</td>
-                                <td>{{ \Carbon\Carbon::parse($item->tgl_jadwal)->format('d M Y') }}</td>
+                                <td>
+                                    {{ $tglJadwal->format('d M Y') }}
+                                    @if ($terlambat)
+                                        <span class="hint late">Terlambat</span>
+                                    @endif
+                                </td>
                                 <td><span class="badge badge-{{ $item->status }}">{{ $item->status }}</span></td>
                                 <td>
                                     <div class="actions">
                                         <a href="{{ route('operator.perbaikan.show', $item) }}" class="btn btn-light btn-sm">Detail</a>
-                                        <a href="{{ route('operator.perbaikan.edit', $item) }}" class="btn btn-warning btn-sm">Edit</a>
+                                        <a href="{{ route('operator.perbaikan.edit', $item) }}" class="btn btn-light btn-sm">Edit</a>
                                         <form action="{{ route('operator.perbaikan.destroy', $item) }}" method="POST"
                                               onsubmit="return confirm('Hapus jadwal maintenance ini?')">
                                             @csrf
@@ -244,7 +199,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="empty">
+                                <td colspan="5" class="empty">
                                     <div style="font-size:32px">🛠️</div>
                                     <h4>Belum Ada Maintenance</h4>
                                     <p style="margin-bottom:14px">Belum terdapat jadwal maintenance untuk charger Anda.</p>
@@ -252,10 +207,45 @@
                                 </td>
                             </tr>
                         @endforelse
+                        <tr id="noResult" style="display:none"><td colspan="5" class="empty">Tidak ada jadwal yang cocok.</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
     </main>
+
+    <script>
+        // Filter status & pencarian pada data yang tampil di halaman (tidak mengubah data di server)
+        (function () {
+            const rows = document.querySelectorAll('.maint-row');
+            const chips = document.querySelectorAll('#chips .chip');
+            const input = document.getElementById('searchMaintenance');
+            const noResult = document.getElementById('noResult');
+            const count = document.getElementById('rowCount');
+            const total = rows.length;
+            let filter = 'semua';
+
+            function apply() {
+                const q = input.value.trim().toLowerCase();
+                let shown = 0;
+                rows.forEach(function (row) {
+                    const ok = (filter === 'semua' || row.dataset.status === filter) && (!q || row.dataset.search.includes(q));
+                    row.style.display = ok ? '' : 'none';
+                    if (ok) shown++;
+                });
+                noResult.style.display = (total > 0 && shown === 0) ? '' : 'none';
+                count.textContent = (shown === total ? total : shown + ' dari ' + total) + ' jadwal';
+            }
+
+            chips.forEach(function (chip) {
+                chip.addEventListener('click', function () {
+                    filter = chip.dataset.filter;
+                    chips.forEach(function (c) { c.classList.toggle('active', c === chip); });
+                    apply();
+                });
+            });
+            input.addEventListener('input', apply);
+        })();
+    </script>
 </body>
 </html>

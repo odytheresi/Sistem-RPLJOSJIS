@@ -5,283 +5,194 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Operator - EVChargeHub</title>
 <style>
+    :root {
+        --green: #3d9e71; --green-dark: #2f7d59; --green-soft: #e0f1e8;
+        --text: #172033; --muted: #8390a5; --line: #e7ecf3;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-        font-family: 'Segoe UI', Arial, sans-serif;
-        background: #f5f7fb;
-        color: #172033;
-        display: flex;
-        min-height: 100vh;
+        font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fb; color: var(--text);
+        display: flex; min-height: 100vh; font-size: 14px;
     }
+    a { color: var(--green); text-decoration: none; }
 
     /* ===== SIDEBAR ===== */
     .sidebar {
-        width: 240px;
-        background: linear-gradient(180deg, #3d9e71, #2a7352);
-        color: #fff;
-        padding: 24px 16px;
-        flex-shrink: 0;
+        width: 240px; background: linear-gradient(180deg, #3d9e71, #2a7352);
+        color: #fff; padding: 24px 16px; flex-shrink: 0;
     }
     .sidebar h1 { font-size: 18px; margin-bottom: 4px; }
     .sidebar .subtitle { font-size: 12px; color: #d4eee1; margin-bottom: 32px; }
     .sidebar nav a {
-        display: block;
-        color: #e6f5ed;
-        text-decoration: none;
-        padding: 12px 14px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        font-size: 14px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        transition: background 0.2s, transform 0.2s;
+        display: block; color: #e6f5ed; padding: 12px 14px; border-radius: 10px; margin-bottom: 10px;
+        font-size: 14px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18);
+        transition: background .2s, transform .2s;
     }
-    .sidebar nav a:hover {
-        background: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        transform: translateX(3px);
-    }
-    .sidebar nav a.active {
-        background: rgba(255, 255, 255, 0.28);
-        border-color: rgba(255, 255, 255, 0.5);
-        color: #fff;
-        font-weight: 700;
-    }
+    .sidebar nav a:hover { background: rgba(255,255,255,.2); color: #fff; transform: translateX(3px); }
+    .sidebar nav a.active { background: rgba(255,255,255,.28); border-color: rgba(255,255,255,.5); color: #fff; font-weight: 700; }
 
     /* ===== MAIN ===== */
     .main { flex: 1; padding: 28px 32px; overflow-x: auto; min-width: 0; }
-
-    .topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-    .topbar h2 { font-size: 22px; font-weight: 800; color: #172033; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+    .topbar h2 { font-size: 22px; font-weight: 800; }
+    .topbar p { color: var(--muted); font-size: 12px; margin-top: 5px; }
     .operator-badge {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: #fff;
-        padding: 8px 14px;
-        border-radius: 999px;
-        border: 1px solid #e8edf4;
-        box-shadow: 0 4px 16px #16274805;
+        display: flex; align-items: center; gap: 10px; background: #fff; padding: 8px 14px;
+        border-radius: 999px; border: 1px solid var(--line); box-shadow: 0 4px 16px #16274805;
     }
     .operator-badge .avatar {
-        width: 32px; height: 32px;
-        border-radius: 50%;
-        background: #3d9e71;
-        color: #fff;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: bold; font-size: 13px;
+        width: 32px; height: 32px; border-radius: 50%; background: var(--green); color: #fff;
+        display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px;
     }
-    .operator-badge .info small { color: #8390a5; display: block; font-size: 11px; }
-    .operator-badge .info strong { font-size: 13px; color: #172033; }
+    .operator-badge small { color: var(--muted); display: block; font-size: 11px; }
+    .operator-badge strong { font-size: 13px; }
+    .operator-badge { cursor: pointer; font-family: inherit; text-align: left; color: var(--text); }
+    .operator-badge:hover { border-color: #a6d8bf; }
+    .operator-badge .caret { color: var(--muted); font-size: 11px; margin-left: 2px; transition: transform .2s; }
+    .profile.open .caret { transform: rotate(180deg); }
+    .profile { position: relative; }
 
-    /* ===== WELCOME PANEL ===== */
-    .welcome-panel {
-        padding: 28px;
-        border-radius: 18px;
-        background: linear-gradient(115deg, #3d9e71, #62b98e);
-        color: white;
-        margin-bottom: 25px;
-        position: relative;
-        overflow: hidden;
+    /* ===== LOGOUT ===== */
+    .sidebar { display: flex; flex-direction: column; }
+    .sidebar-logout { margin-top: auto; padding-top: 16px; }
+    .sidebar-logout form { margin: 0; }
+    .btn-logout-side {
+        width: 100%; padding: 12px 14px; border-radius: 10px; font-size: 14px; font-family: inherit; cursor: pointer;
+        color: #fff; background: rgba(220,38,38,.35); border: 1px solid rgba(255,255,255,.3); text-align: left; transition: .2s;
     }
-    .welcome-panel h3 { font-size: 23px; font-weight: 800; margin: 0 0 10px; }
-    .welcome-panel p { color: #e6f5ed; font-size: 13px; margin: 0; max-width: 520px; line-height: 1.8; }
-    .section-title { font-size: 16px; font-weight: 800; margin: 0; }
-    .section-subtitle { color: #8390a5; font-size: 12px; margin-top: 5px; }
+    .btn-logout-side:hover { background: #dc2626; transform: translateX(3px); }
+    .profile-logout { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid #edf0f5; }
+    .btn-logout-card {
+        width: 100%; padding: 9px 12px; border-radius: 9px; font-size: 12px; font-weight: 700; font-family: inherit;
+        cursor: pointer; background: #fff; color: #dc2626; border: 1px solid #fecaca; transition: .2s;
+    }
+    .btn-logout-card:hover { background: #dc2626; color: #fff; }
+    .profile-card {
+        position: absolute; right: 0; top: calc(100% + 10px); width: 300px; z-index: 50;
+        background: #fff; border: 1px solid var(--line); border-radius: 15px; padding: 18px;
+        box-shadow: 0 12px 30px rgba(22,39,72,.15); display: none;
+    }
+    .profile.open .profile-card { display: block; }
+    .profile-top { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid #edf0f5; margin-bottom: 12px; }
+    .profile-top .avatar-lg {
+        width: 46px; height: 46px; border-radius: 50%; background: var(--green); color: #fff;
+        display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0;
+    }
+    .profile-top strong { display: block; font-size: 14px; }
+    .profile-top span { font-size: 11px; color: var(--green-dark); background: var(--green-soft); padding: 2px 8px; border-radius: 10px; font-weight: 700; display: inline-block; margin-top: 4px; }
+    .profile-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; font-size: 12px; }
+    .profile-row dt { color: var(--muted); }
+    .profile-row dd { margin: 0; font-weight: 700; text-align: right; word-break: break-all; }
+    @media (max-width: 600px) { .profile-card { right: auto; left: 0; width: 280px; } }
+
+    /* ===== PERHATIAN ===== */
+    .alerts { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+    .alert-chip {
+        display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 10px;
+        font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent;
+    }
+    .alert-chip.orange { background: #ffedd5; color: #9a3412; }
+    .alert-chip.red { background: #fee2e2; color: #b91c1c; }
+    .alert-chip.green { background: #dcfce7; color: #166534; cursor: default; }
 
     /* ===== STAT CARDS ===== */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 17px;
-        margin: 20px 0 30px;
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
     .stat-card {
-        background: white;
-        border: 1px solid #e8edf4;
-        border-radius: 15px;
-        padding: 21px;
-        box-shadow: 0 4px 16px #16274805;
-        min-width: 0;
+        background: #fff; border: 1px solid var(--line); border-radius: 15px; padding: 18px 20px;
+        box-shadow: 0 4px 16px #16274805; display: flex; gap: 14px; align-items: flex-start; min-width: 0;
     }
-    .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .stat-icon {
-        width: 43px; height: 43px;
-        display: grid; place-items: center;
-        border-radius: 12px;
-        font-size: 20px;
-    }
-    .blue { background: #e0f1e8; }
-    .green { background: #dcfce7; }
-    .orange { background: #ffedd5; }
-    .red { background: #fee2e2; }
-    .stat-label { font-size: 12px; color: #77849a; font-weight: 600; margin-top: 17px; }
-    .stat-value { font-size: 30px; font-weight: 800; letter-spacing: -1px; margin-top: 5px; color: #172033; }
-    .stat-note { color: #98a2b3; font-size: 11px; margin-top: 5px; }
+    .stat-icon { width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center; border-radius: 12px; font-size: 19px; }
+    .bg-green { background: var(--green-soft); }
+    .bg-lime { background: #dcfce7; }
+    .bg-orange { background: #ffedd5; }
+    .bg-red { background: #fee2e2; }
+    .stat-body { min-width: 0; flex: 1; }
+    .stat-label { font-size: 11px; color: #77849a; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+    .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -1px; margin-top: 2px; }
+    .stat-value small { font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: 0; }
+    .stat-note { color: #98a2b3; font-size: 11px; margin-top: 3px; }
+    .stat-split { display: flex; gap: 14px; margin-top: 2px; }
+    .stat-split div { font-size: 11px; color: #77849a; }
+    .stat-split b { display: block; font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -1px; }
+    .bar { height: 6px; border-radius: 6px; background: #edf0f5; margin-top: 9px; overflow: hidden; display: flex; }
+    .bar span { display: block; height: 100%; }
 
-    /* ===== QUICK LINKS ===== */
-    .quick-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 15px;
-        margin: 18px 0 30px;
+    /* ===== PANEL DATA (tab) ===== */
+    .dashboard-panel { background: #fff; border: 1px solid var(--line); border-radius: 15px; overflow: hidden; margin-bottom: 22px; }
+    .panel-head { padding: 16px 20px 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+    .section-title { font-size: 16px; font-weight: 800; }
+    .section-subtitle { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .tabs { display: flex; gap: 4px; padding: 14px 20px 0; border-bottom: 1px solid #edf0f5; overflow-x: auto; }
+    .tab {
+        padding: 10px 14px; font-size: 12px; font-weight: 700; color: #78869b; background: none; border: 0;
+        border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; font-family: inherit;
     }
-    .quick-link {
-        display: flex;
-        align-items: center;
-        gap: 13px;
-        padding: 17px;
-        background: white;
-        border: 1px solid #e7ecf3;
-        border-radius: 14px;
-        color: #172033;
-        text-decoration: none;
-        transition: .2s;
-        min-width: 0;
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--green-dark); border-bottom-color: var(--green); }
+    .tab .n {
+        display: inline-block; min-width: 20px; padding: 1px 6px; margin-left: 5px; border-radius: 10px;
+        background: #f1f5f9; color: #64748b; font-size: 10px; text-align: center;
     }
-    .quick-link:hover {
-        transform: translateY(-3px);
-        border-color: #a6d8bf;
-        box-shadow: 0 8px 22px #3d9e710c;
-        color: #3d9e71;
+    .tab.active .n { background: var(--green-soft); color: var(--green-dark); }
+    .toolbar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 14px 20px; }
+    .toolbar input {
+        flex: 1; min-width: 200px; max-width: 340px; padding: 9px 13px; border: 1px solid var(--line); border-radius: 10px;
+        font-size: 12px; font-family: inherit; outline: none; background: #fff; color: var(--text);
     }
-    .quick-icon {
-        width: 43px; height: 43px; flex: 0 0 43px;
-        display: grid; place-items: center;
-        background: #e8f5ee;
-        border-radius: 12px;
-        font-size: 20px;
+    .toolbar input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
+    .toolbar .meta { display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--muted); }
+    .btn {
+        display: inline-block; padding: 7px 12px; border-radius: 9px; font-size: 11px; font-weight: 700;
+        background: var(--green); color: #fff; border: 0; cursor: pointer; font-family: inherit; transition: .2s;
     }
-    .quick-link strong { display: block; font-size: 12px; font-weight: 800; }
-    .quick-link small { display: block; margin-top: 5px; color: #8390a5; font-size: 10px; }
-    .quick-arrow { margin-left: auto; color: #9ba6b8; }
+    .btn:hover { background: var(--green-dark); color: #fff; }
 
-    /* ===== PANEL & TABLE ===== */
-    .dashboard-panel {
-        background: white;
-        border: 1px solid #e7ecf3;
-        border-radius: 15px;
-        overflow: hidden;
-        margin-bottom: 25px;
-    }
-    .panel-header {
-        padding: 20px 22px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        border-bottom: 1px solid #edf0f5;
-        flex-wrap: wrap;
-    }
-    .panel-count {
-        padding: 6px 10px;
-        border-radius: 8px;
-        background: #f1f5f9;
-        color: #64748b;
-        font-size: 11px;
-    }
-    .table-responsive { overflow-x: auto; }
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 12px;
-        white-space: nowrap;
-    }
+    .table-responsive { overflow: auto; max-height: 400px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
     th {
-        padding: 14px 18px;
-        text-align: left;
-        background: #f8fafc;
-        color: #78869b;
-        font-weight: 700;
-        border-bottom: 1px solid #edf0f5;
+        padding: 12px 18px; text-align: left; background: #f8fafc; color: #78869b; font-weight: 700;
+        border-bottom: 1px solid #edf0f5; position: sticky; top: 0; z-index: 1;
     }
-    td {
-        padding: 15px 18px;
-        border-bottom: 1px solid #f0f2f6;
-        color: #475569;
-    }
-    tbody tr { cursor: pointer; transition: background 0.15s; }
+    td { padding: 13px 18px; border-bottom: 1px solid #f0f2f6; color: #475569; }
+    td strong { color: var(--text); }
+    td .sub { display: block; color: #98a2b3; font-size: 10px; margin-top: 2px; }
+    td.wrap { white-space: normal; min-width: 220px; max-width: 360px; }
+    tbody tr { cursor: pointer; transition: background .15s; }
     tbody tr:last-child td { border-bottom: 0; }
     tbody tr:hover td { background: #fafcff; }
+    .empty-state { text-align: center; padding: 30px !important; color: #98a2b3 !important; cursor: default; }
+    tr.no-hover { cursor: default; }
 
-    .empty-state {
-        text-align: center;
-        padding: 28px !important;
-        color: #98a2b3 !important;
-        cursor: default;
-    }
+    /* ===== BADGE ===== */
+    .badge { display: inline-block; padding: 4px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #f1f5f9; color: #64748b; text-transform: capitalize; }
+    .badge.aktif, .badge.normal, .badge.tersedia, .badge.selesai { background: #dcfce7; color: #166534; }
+    .badge.error, .badge.rusak, .badge.nonaktif, .badge.ditolak { background: #fee2e2; color: #b91c1c; }
+    .badge.digunakan, .badge.penuh, .badge.diproses { background: #dbeafe; color: #1d4ed8; }
+    .badge.maintenance, .badge.perbaikan, .badge.dalam-perawatan, .badge.pending, .badge.baru { background: #ffedd5; color: #9a3412; }
 
-    /* ===== STATUS BADGE ===== */
-    .badge {
-        display: inline-block;
-        padding: 5px 9px;
-        border-radius: 20px;
-        font-size: 10px;
-        font-weight: 700;
-        background: #f1f5f9;
-        color: #64748b;
-    }
-    .badge.aktif, .badge.normal, .badge.tersedia { background: #dcfce7; color: #166534; }
-    .badge.error, .badge.rusak, .badge.nonaktif { background: #fee2e2; color: #b91c1c; }
-    .badge.digunakan, .badge.penuh { background: #dbeafe; color: #1d4ed8; }
-    .badge.maintenance, .badge.perbaikan, .badge.dalam-perawatan, .badge.pending { background: #ffedd5; color: #9a3412; }
-
-    /* ===== MODAL DETAIL ===== */
+    /* ===== MODAL ===== */
     .modal-overlay {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(15, 23, 42, 0.5);
-        display: flex; align-items: center; justify-content: center;
-        opacity: 0; visibility: hidden;
-        transition: all 0.2s ease;
-        z-index: 999;
+        position: fixed; inset: 0; background: rgba(15,23,42,.5); display: flex; align-items: center; justify-content: center;
+        opacity: 0; visibility: hidden; transition: all .2s ease; z-index: 999; padding: 16px;
     }
     .modal-overlay.active { opacity: 1; visibility: visible; }
     .modal-box {
-        background: #fff; width: 100%; max-width: 420px;
-        border-radius: 15px; padding: 24px;
-        border: 1px solid #e7ecf3;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        transform: translateY(10px);
-        transition: transform 0.2s ease;
+        background: #fff; width: 100%; max-width: 440px; border-radius: 15px; padding: 22px;
+        border: 1px solid var(--line); box-shadow: 0 10px 25px rgba(0,0,0,.1);
+        transform: translateY(10px); transition: transform .2s ease; max-height: 90vh; overflow-y: auto;
     }
     .modal-overlay.active .modal-box { transform: translateY(0); }
-    .modal-header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 16px; border-bottom: 1px solid #edf0f5; padding-bottom: 10px;
-    }
-    .modal-header h3 { font-size: 16px; font-weight: 800; color: #172033; }
-    .modal-close {
-        background: #f1f5f9; border: none; width: 28px; height: 28px;
-        border-radius: 50%; cursor: pointer; color: #64748b; font-weight: bold;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .modal-body { font-size: 13px; color: #475569; display: flex; flex-direction: column; gap: 8px; }
-    .modal-body p strong { color: #172033; width: 120px; display: inline-block; }
-    .modal-footer { margin-top: 20px; display: flex; justify-content: flex-end; }
-    .btn-close {
-        background: #3d9e71; color: #fff; border: none; padding: 8px 16px;
-        border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer;
-    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #edf0f5; padding-bottom: 10px; }
+    .modal-header h3 { font-size: 16px; font-weight: 800; }
+    .modal-close { background: #f1f5f9; border: 0; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 16px; }
+    .modal-body { display: grid; grid-template-columns: 130px 1fr; row-gap: 11px; font-size: 13px; }
+    .modal-body dt { color: var(--muted); font-size: 12px; }
+    .modal-body dd { margin: 0; font-weight: 600; color: var(--text); word-break: break-word; }
+    .modal-footer { margin-top: 18px; display: flex; justify-content: flex-end; gap: 8px; }
 
-    @media (max-width: 1200px) {
-        .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 900px) {
-        body { flex-direction: column; }
-        .sidebar { width: 100%; }
-    }
-    @media (max-width: 600px) {
-        .stats-grid, .quick-grid { grid-template-columns: 1fr; }
-        .welcome-panel { padding: 22px; }
-        .welcome-panel h3 { font-size: 20px; }
-    }
+    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 900px) { body { flex-direction: column; } .sidebar { width: 100%; } .main { padding: 22px 18px; } }
+    @media (max-width: 600px) { .stats-grid { grid-template-columns: 1fr; } .modal-body { grid-template-columns: 1fr; row-gap: 2px; } .modal-body dd { margin-bottom: 9px; } }
 </style>
 </head>
 <body>
@@ -298,150 +209,84 @@
             <a href="/operator/keluhan">📝 Keluhan</a>
             <a href="/operator/maintenance">📈 Maintenance</a>
         </nav>
+
+        <div class="sidebar-logout">
+            <form method="POST" action="{{ route('logout') }}" onsubmit="return confirm('Yakin ingin keluar?')">
+                @csrf
+                <button type="submit" class="btn-logout-side">🚪 Keluar</button>
+            </form>
+        </div>
     </aside>
 
     <!-- ===== MAIN ===== -->
     <main class="main">
 
         <div class="topbar">
-            <h2>Dashboard Operator</h2>
-            <div class="operator-badge">
-                <div class="avatar" id="avatar-initial">-</div>
-                <div class="info">
-                    <strong id="operator-name">Memuat...</strong>
-                    <small id="operator-id">-</small>
+            <div>
+                <h2>Dashboard Operator</h2>
+                <p id="today">Ringkasan operasional stasiun dan charger.</p>
+            </div>
+            <div class="profile" id="profile">
+                <button type="button" class="operator-badge" id="profileBtn" aria-haspopup="true" aria-expanded="false">
+                    <div class="avatar" id="avatar-initial">-</div>
+                    <div>
+                        <strong id="operator-name">Memuat...</strong>
+                        <small id="operator-id">-</small>
+                    </div>
+                    <span class="caret">▾</span>
+                </button>
+                <div class="profile-card" id="profileCard">
+                    <div class="profile-top">
+                        <div class="avatar-lg" id="pAvatar">-</div>
+                        <div>
+                            <strong id="pNama">-</strong>
+                            <span>Operator</span>
+                        </div>
+                    </div>
+                    <dl>
+                        <div class="profile-row"><dt>ID Operator</dt><dd id="pId">-</dd></div>
+                        <div class="profile-row"><dt>Email</dt><dd id="pEmail">-</dd></div>
+                        <div class="profile-row"><dt>No. HP</dt><dd id="pHp">-</dd></div>
+                        <div class="profile-row"><dt>Terdaftar</dt><dd id="pSejak">-</dd></div>
+                        <div class="profile-row"><dt>Stasiun dikelola</dt><dd id="pStasiun">-</dd></div>
+                    </dl>
+                    <form method="POST" action="{{ route('logout') }}" class="profile-logout" onsubmit="return confirm('Yakin ingin keluar?')">
+                        @csrf
+                        <button type="submit" class="btn-logout-card">🚪 Keluar dari akun</button>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <!-- ===== WELCOME ===== -->
-        <div class="welcome-panel">
-            <h3>Selamat datang di EVChargeHub 👋</h3>
-            <p>
-                Kelola stasiun pengisian kendaraan listrik, pantau charger,
-                atur tarif, dan tindak lanjuti keluhan melalui satu dashboard.
-            </p>
-        </div>
+        <!-- ===== PERLU PERHATIAN ===== -->
+        <div class="alerts" id="alerts"></div>
 
-        <div>
-            <h3 class="section-title">Ringkasan Operasional Operator</h3>
-            <div class="section-subtitle">Catatan Informasi Operasional Stasiun dan Charger</div>
-        </div>
+        <!-- ===== STATISTIK ===== -->
+        <div class="stats-grid" id="stats-grid"></div>
 
-        <!-- ===== STAT SUMMARY ===== -->
-        <div class="stats-grid" id="stats-grid">
-            <!-- diisi oleh JS -->
-        </div>
-
-        <div>
-            <h3 class="section-title">Akses Cepat</h3>
-            <div class="section-subtitle">Pilih menu untuk mengelola data operasional.</div>
-        </div>
-
-        <div class="quick-grid">
-            <a class="quick-link" href="/operator/lokasi_stasiun">
-                <span class="quick-icon">📍</span>
-                <span><strong>Kelola Stasiun</strong><small>Lihat dan atur lokasi stasiun</small></span>
-                <span class="quick-arrow">›</span>
-            </a>
-            <a class="quick-link" href="/operator/charger">
-                <span class="quick-icon">🔌</span>
-                <span><strong>Kelola Charger</strong><small>Lihat daftar unit charger</small></span>
-                <span class="quick-arrow">›</span>
-            </a>
-            <a class="quick-link" href="/operator/tarif">
-                <span class="quick-icon">💰</span>
-                <span><strong>Atur Tarif</strong><small>Lihat dan kelola tarif pengisian</small></span>
-                <span class="quick-arrow">›</span>
-            </a>
-            <a class="quick-link" href="/operator/keluhan">
-                <span class="quick-icon">📝</span>
-                <span><strong>Kelola Keluhan</strong><small>Periksa laporan pengguna</small></span>
-                <span class="quick-arrow">›</span>
-            </a>
-            <a class="quick-link" href="/operator/maintenance">
-                <span class="quick-icon">🛠️</span>
-                <span><strong>Maintenance</strong><small>Lihat data perawatan</small></span>
-                <span class="quick-arrow">›</span>
-            </a>
-        </div>
-
-        <!-- ===== CHARGING STATION ===== -->
+        <!-- ===== DATA OPERASIONAL (TAB) ===== -->
         <section class="dashboard-panel">
-            <div class="panel-header">
+            <div class="panel-head">
                 <div>
-                    <h3 class="section-title">Charging Station</h3>
-                    <div class="section-subtitle">Data stasiun yang terdaftar.</div>
+                    <h3 class="section-title">Data Operasional</h3>
+                    <div class="section-subtitle">Klik baris untuk melihat detail lengkap.</div>
                 </div>
-                <span class="panel-count" id="station-count">0 lokasi</span>
+            </div>
+            <div class="tabs" id="tabs"></div>
+            <div class="toolbar">
+                <input type="text" id="q" placeholder="🔍 Cari di tab ini...">
+                <div class="meta">
+                    <span id="rowCount">-</span>
+                    <a class="btn" id="manageLink" href="#">Kelola →</a>
+                </div>
             </div>
             <div class="table-responsive">
-                <table id="station-table">
-                    <thead>
-                        <tr><th>ID</th><th>Nama Stasiun</th><th>Alamat</th><th>Status</th></tr>
-                    </thead>
-                    <tbody></tbody>
+                <table>
+                    <thead id="thead"></thead>
+                    <tbody id="tbody"></tbody>
                 </table>
             </div>
         </section>
-
-        <!-- ===== CHARGER ===== -->
-        <section class="dashboard-panel">
-            <div class="panel-header">
-                <div>
-                    <h3 class="section-title">Unit Charger</h3>
-                    <div class="section-subtitle">Ringkasan unit charger terdaftar.</div>
-                </div>
-                <span class="panel-count" id="charger-count">0 unit</span>
-            </div>
-            <div class="table-responsive">
-                <table id="charger-table">
-                    <thead>
-                        <tr><th>Kode</th><th>Stasiun</th><th>Konektor</th><th>Daya</th><th>Status Penggunaan</th><th>Kondisi</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- ===== TARIF ===== -->
-        <section class="dashboard-panel">
-            <div class="panel-header">
-                <div>
-                    <h3 class="section-title">Tarif</h3>
-                    <div class="section-subtitle">Tarif pengisian yang tercatat.</div>
-                </div>
-                <span class="panel-count" id="tarif-count">0 tarif</span>
-            </div>
-            <div class="table-responsive">
-                <table id="tarif-table">
-                    <thead>
-                        <tr><th>ID Tarif</th><th>Stasiun</th><th>Harga/kWh</th><th>Berlaku Mulai</th><th>Status</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- ===== KELUHAN ===== -->
-        <section class="dashboard-panel">
-            <div class="panel-header">
-                <div>
-                    <h3 class="section-title">Keluhan Pengguna</h3>
-                    <div class="section-subtitle">Laporan keluhan yang tercatat.</div>
-                </div>
-                <span class="panel-count" id="keluhan-count">0 keluhan</span>
-            </div>
-            <div class="table-responsive">
-                <table id="keluhan-table">
-                    <thead>
-                        <tr><th>Tanggal</th><th>Stasiun</th><th>Pengemudi</th><th>Keluhan</th><th>Status</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-
 
     </main>
 
@@ -450,11 +295,12 @@
         <div class="modal-box">
             <div class="modal-header">
                 <h3 id="modalTitle">Detail Data</h3>
-                <button class="modal-close" onclick="closeModal()">×</button>
+                <button type="button" class="modal-close" onclick="closeModal()">×</button>
             </div>
-            <div class="modal-body" id="modalContent"></div>
+            <dl class="modal-body" id="modalContent"></dl>
             <div class="modal-footer">
-                <button class="btn-close" onclick="closeModal()">Tutup</button>
+                <a class="btn" id="modalLink" href="#">Kelola data →</a>
+                <button type="button" class="btn" style="background:#64748b" onclick="closeModal()">Tutup</button>
             </div>
         </div>
     </div>
@@ -467,166 +313,214 @@
         const tarifs = @json($tarifs);
         const keluhan = @json($keluhan);
 
-        // Angka statistik dari controller teman Anda
-        const totalStationCount = {{ $totalStation }};
-        const totalChargerCount = {{ $totalCharger }};
-        const chargerAktifCount = {{ $chargerAktif }};
-        const chargerNonaktifCount = {{ $chargerNonaktif }};
-        const chargerMaintenanceCount = {{ $chargerMaintenance }};
+        const totalStationCount = {{ (int) $totalStation }};
+        const totalChargerCount = {{ (int) $totalCharger }};
+        const chargerAktifCount = {{ (int) $chargerAktif }};
+        const chargerNonaktifCount = {{ (int) $chargerNonaktif }};
+        const chargerMaintenanceCount = {{ (int) $chargerMaintenance }};
 
-        // ===== RENDER IDENTITAS OPERATOR =====
-        document.getElementById('operator-name').textContent = operator.nama;
-        document.getElementById('operator-id').textContent = 'ID Operator #' + operator.id_operator;
-        document.getElementById('avatar-initial').textContent = operator.nama.charAt(0).toUpperCase();
-
-        // ===== RENDER STAT CARDS =====
-        document.getElementById('stats-grid').innerHTML = `
-            <div class="stat-card">
-                <div class="stat-top"><div class="stat-icon blue">📍</div></div>
-                <div class="stat-label">Total Stasiun</div>
-                <div class="stat-value">${totalStationCount}</div>
-                <div class="stat-note">Stasiun terdaftar</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-top"><div class="stat-icon green">🔌</div></div>
-                <div class="stat-label">Charger Aktif</div>
-                <div class="stat-value">${chargerAktifCount}/${totalChargerCount}</div>
-                <div class="stat-note">Unit charger aktif</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-top"><div class="stat-icon orange">🛠️</div></div>
-                <div class="stat-label">Maintenance</div>
-                <div class="stat-value">${chargerMaintenanceCount}</div>
-                <div class="stat-note">Charger dalam perawatan</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-top"><div class="stat-icon red">⛔</div></div>
-                <div class="stat-label">Non-Aktif</div>
-                <div class="stat-value">${chargerNonaktifCount}</div>
-                <div class="stat-note">Charger nonaktif</div>
-            </div>
-        `;
-
-        function badgeClass(status) {
-            if (!status) return '';
-            return status.toLowerCase().replace(/\s+/g, '-');
+        // ===== HELPER =====
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s ?? '-').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const badgeClass = s => s ? String(s).toLowerCase().replace(/\s+/g, '-') : '';
+        const badge = s => '<span class="badge ' + esc(badgeClass(s)) + '">' + esc(s) + '</span>';
+        const rupiah = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+        function fmtDate(v) {
+            if (!v) return '-';
+            const d = new Date(v);
+            return isNaN(d) ? String(v) : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
         }
 
-        // ===== RENDER CHARGING STATION (Tabel dengan onclick) =====
-        const stationBody = document.querySelector('#station-table tbody');
-        stationBody.innerHTML = '';
-        chargingStations.forEach(cs => {
-            const row = document.createElement('tr');
-            row.setAttribute('onclick', `openModal('Charging Station', {
-                'ID': '${cs.id}',
-                'Nama Stasiun': '${cs.nama_st}',
-                'Alamat': '${cs.alamat}',
-                'Status': '${cs.status}'
-            })`);
+        // ===== IDENTITAS OPERATOR & TANGGAL =====
+        const namaOperator = operator.nama ?? operator.nama_operator ?? 'Operator';
+        const inisial = String(namaOperator).charAt(0).toUpperCase();
+        $('operator-name').textContent = namaOperator;
+        $('operator-id').textContent = 'ID Operator #' + operator.id_operator;
+        $('avatar-initial').textContent = inisial;
 
-            row.innerHTML = `
-                <td>${cs.id}</td>
-                <td>${cs.nama_st}</td>
-                <td>${cs.alamat}</td>
-                <td><span class="badge ${badgeClass(cs.status)}">${cs.status}</span></td>
-            `;
-            stationBody.appendChild(row);
+        // Kartu profil (kolom yang tidak dikirim controller ditampilkan "-")
+        $('pAvatar').textContent = inisial;
+        $('pNama').textContent = namaOperator;
+        $('pId').textContent = '#' + operator.id_operator;
+        $('pEmail').textContent = operator.email || '-';
+        $('pHp').textContent = operator.no_hp || '-';
+        $('pSejak').textContent = operator.terdaftar || (operator.created_at ? new Date(operator.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-');
+        $('pStasiun').textContent = totalStationCount + ' lokasi';
+
+        // Buka/tutup kartu profil
+        const profile = $('profile');
+        $('profileBtn').addEventListener('click', function (e) {
+            e.stopPropagation();
+            const open = profile.classList.toggle('open');
+            this.setAttribute('aria-expanded', open);
         });
-        document.getElementById('station-count').textContent = chargingStations.length + ' lokasi';
+        document.addEventListener('click', function (e) { if (!profile.contains(e.target)) profile.classList.remove('open'); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') profile.classList.remove('open'); });
+        $('today').textContent = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-        // ===== RENDER CHARGER (Tabel dengan onclick) =====
-        const chargerBody = document.querySelector('#charger-table tbody');
-        chargerBody.innerHTML = '';
+        // ===== DATA TURUNAN =====
+        const isPending = k => !k.status || /pending|baru|menunggu/i.test(k.status);
+        const keluhanBaru = keluhan.filter(isPending).length;
+        const persenAktif = totalChargerCount ? Math.round(chargerAktifCount / totalChargerCount * 100) : 0;
+        const pct = n => totalChargerCount ? (n / totalChargerCount * 100) : 0;
+
+        // jumlah charger per stasiun (berdasar nama stasiun)
+        const chargerPerStasiun = {};
         chargers.forEach(c => {
-            const row = document.createElement('tr');
-            const stationName = c.charging_station ? c.charging_station.nama_st : '-';
-            const connectorName = c.tipe_konektor ? c.tipe_konektor.nm_konektor : '-';
-
-            row.setAttribute('onclick', `openModal('Unit Charger', {
-                'Kode Charger': '${c.kd_charger}',
-                'Stasiun': '${stationName}',
-                'Konektor': '${connectorName}',
-                'Daya': '${c.daya_maks ?? c.daya} kW',
-                'Status Penggunaan': '${c.status ?? 'Tersedia'}'
-            })`);
-
-            row.innerHTML = `
-                <td>${c.kd_charger}</td>
-                <td>${stationName}</td>
-                <td>${connectorName}</td>
-                <td>${c.daya_maks ?? c.daya} kW</td>
-                <td><span class="badge ${badgeClass(c.status ?? 'Tersedia')}">${c.status ?? 'Tersedia'}</span></td>
-                <td><span class="badge normal">Normal</span></td>
-            `;
-            chargerBody.appendChild(row);
+            const n = c.charging_station ? c.charging_station.nama_st : null;
+            if (n) chargerPerStasiun[n] = (chargerPerStasiun[n] || 0) + 1;
         });
-        document.getElementById('charger-count').textContent = chargers.length + ' unit';
 
-        // ===== RENDER TARIF (Tabel dengan onclick) =====
-        const tarifBody = document.querySelector('#tarif-table tbody');
-        tarifBody.innerHTML = '';
-        tarifs.forEach(t => {
-            const row = document.createElement('tr');
-            const stationName = t.charger && t.charger.charging_station ? t.charger.charging_station.nama_st : '-';
-            const harga = Number(t.harga_per_kWh ?? t.harga_per_kwh ?? 0).toLocaleString('id-ID');
+        // ===== STATISTIK =====
+        $('stats-grid').innerHTML = `
+            <div class="stat-card">
+                <div class="stat-icon bg-green">📍</div>
+                <div class="stat-body">
+                    <div class="stat-label">Total Stasiun</div>
+                    <div class="stat-value">${totalStationCount}</div>
+                    <div class="stat-note">${totalChargerCount} unit charger terpasang</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-lime">🔌</div>
+                <div class="stat-body">
+                    <div class="stat-label">Charger Aktif</div>
+                    <div class="stat-value">${chargerAktifCount}<small> / ${totalChargerCount}</small></div>
+                    <div class="bar" title="${persenAktif}% aktif">
+                        <span style="width:${pct(chargerAktifCount)}%;background:#3d9e71"></span>
+                        <span style="width:${pct(chargerMaintenanceCount)}%;background:#f59e0b"></span>
+                        <span style="width:${pct(chargerNonaktifCount)}%;background:#dc2626"></span>
+                    </div>
+                    <div class="stat-note">${persenAktif}% unit beroperasi</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-orange">🛠️</div>
+                <div class="stat-body">
+                    <div class="stat-label">Perlu Tindakan</div>
+                    <div class="stat-split">
+                        <div><b>${chargerMaintenanceCount}</b>Perawatan</div>
+                        <div><b>${chargerNonaktifCount}</b>Non-aktif</div>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-red">📝</div>
+                <div class="stat-body">
+                    <div class="stat-label">Keluhan Baru</div>
+                    <div class="stat-value">${keluhanBaru}</div>
+                    <div class="stat-note">dari ${keluhan.length} total keluhan</div>
+                </div>
+            </div>`;
 
-            row.setAttribute('onclick', `openModal('Tarif', {
-                'ID Tarif': '${t.id}',
-                'Stasiun': '${stationName}',
-                'Harga / kWh': 'Rp ${harga}',
-                'Berlaku Mulai': '${t.berlaku_mulai}',
-                'Status': 'Aktif'
-            })`);
+        // ===== PERINGATAN RINGKAS =====
+        (function () {
+            const a = [];
+            if (keluhanBaru > 0) a.push(['red', '📝 ' + keluhanBaru + ' keluhan menunggu ditindaklanjuti', 'keluhan']);
+            if (chargerNonaktifCount > 0) a.push(['red', '⛔ ' + chargerNonaktifCount + ' charger non-aktif', 'charger']);
+            if (chargerMaintenanceCount > 0) a.push(['orange', '🛠️ ' + chargerMaintenanceCount + ' charger dalam perawatan', 'charger']);
+            $('alerts').innerHTML = a.length
+                ? a.map(x => '<span class="alert-chip ' + x[0] + '" onclick="setTab(\'' + x[2] + '\')">' + x[1] + '</span>').join('')
+                : '<span class="alert-chip green">✅ Semua operasional normal, tidak ada yang perlu ditindaklanjuti.</span>';
+        })();
 
-            row.innerHTML = `
-                <td>${t.id}</td>
-                <td>${stationName}</td>
-                <td>Rp ${harga}</td>
-                <td>${t.berlaku_mulai}</td>
-                <td><span class="badge aktif">Aktif</span></td>
-            `;
-            tarifBody.appendChild(row);
-        });
-        document.getElementById('tarif-count').textContent = tarifs.length + ' tarif';
-
-        // ===== RENDER KELUHAN =====
-        const keluhanBody = document.querySelector('#keluhan-table tbody');
-        keluhanBody.innerHTML = '';
-        if (keluhan.length === 0) {
-            keluhanBody.innerHTML = `<tr><td colspan="5" class="empty-state">Belum ada keluhan</td></tr>`;
-        } else {
-            keluhan.forEach(k => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${k.tanggal ?? '-'}</td>
-                    <td>${k.stasiun ?? '-'}</td>
-                    <td>${k.pengemudi ?? '-'}</td>
-                    <td>${k.keluhan ?? '-'}</td>
-                    <td><span class="badge maintenance">${k.status ?? 'Pending'}</span></td>
-                `;
-                keluhanBody.appendChild(row);
-            });
-        }
-        document.getElementById('keluhan-count').textContent = keluhan.length + ' keluhan';
-
-        // ===== FUNGSI MODAL =====
-        function openModal(title, dataObj) {
-            document.getElementById('modalTitle').textContent = title;
-            const contentContainer = document.getElementById('modalContent');
-            contentContainer.innerHTML = '';
-
-            for (const [key, value] of Object.entries(dataObj)) {
-                const p = document.createElement('p');
-                p.innerHTML = `<strong>${key}:</strong> ${value}`;
-                contentContainer.appendChild(p);
+        // ===== KONFIGURASI TAB =====
+        const stationOf = c => c.charging_station ? c.charging_station.nama_st : '-';
+        const TABS = {
+            stasiun: {
+                label: 'Stasiun', title: 'Charging Station', link: '/operator/lokasi_stasiun', data: chargingStations,
+                head: ['Nama Stasiun', 'Alamat', 'Charger', 'Status'],
+                cells: cs => ['<strong>' + esc(cs.nama_st) + '</strong><span class="sub">ID ' + esc(cs.id) + '</span>',
+                              '<td class="wrap">' + esc(cs.alamat), (chargerPerStasiun[cs.nama_st] || 0) + ' unit', badge(cs.status)],
+                search: cs => [cs.nama_st, cs.alamat, cs.status].join(' '),
+                detail: cs => ({ 'ID': cs.id, 'Nama Stasiun': cs.nama_st, 'Alamat': cs.alamat, 'Jumlah Charger': (chargerPerStasiun[cs.nama_st] || 0) + ' unit', 'Status': cs.status })
+            },
+            charger: {
+                label: 'Charger', title: 'Unit Charger', link: '/operator/charger', data: chargers,
+                head: ['Kode', 'Stasiun', 'Konektor', 'Daya', 'Status'],
+                cells: c => ['<strong>' + esc(c.kd_charger) + '</strong>', esc(stationOf(c)),
+                             esc(c.tipe_konektor ? c.tipe_konektor.nm_konektor : '-'), esc(c.daya_maks ?? c.daya) + ' kW', badge(c.status ?? 'Tersedia')],
+                search: c => [c.kd_charger, stationOf(c), c.tipe_konektor ? c.tipe_konektor.nm_konektor : '', c.status].join(' '),
+                detail: c => ({ 'Kode Charger': c.kd_charger, 'Stasiun': stationOf(c), 'Konektor': c.tipe_konektor ? c.tipe_konektor.nm_konektor : '-',
+                                'Daya Maks': (c.daya_maks ?? c.daya) + ' kW', 'Status': c.status ?? 'Tersedia' })
+            },
+            tarif: {
+                label: 'Tarif', title: 'Tarif', link: '/operator/tarif', data: tarifs,
+                head: ['Stasiun', 'Charger', 'Harga / kWh', 'Berlaku Mulai'],
+                cells: t => [esc(t.charger && t.charger.charging_station ? t.charger.charging_station.nama_st : '-'),
+                             esc(t.charger ? t.charger.kd_charger : '-'),
+                             '<strong>' + rupiah(t.harga_per_kWh ?? t.harga_per_kwh) + '</strong>', esc(fmtDate(t.berlaku_mulai))],
+                search: t => [t.charger && t.charger.charging_station ? t.charger.charging_station.nama_st : '', t.charger ? t.charger.kd_charger : '', t.harga_per_kWh ?? t.harga_per_kwh].join(' '),
+                detail: t => ({ 'ID Tarif': t.id, 'Stasiun': t.charger && t.charger.charging_station ? t.charger.charging_station.nama_st : '-',
+                                'Charger': t.charger ? t.charger.kd_charger : '-', 'Harga / kWh': rupiah(t.harga_per_kWh ?? t.harga_per_kwh),
+                                'Berlaku Mulai': fmtDate(t.berlaku_mulai) })
+            },
+            keluhan: {
+                label: 'Keluhan', title: 'Keluhan Pengguna', link: '/operator/keluhan', data: keluhan,
+                head: ['Tanggal', 'Stasiun', 'Pengemudi', 'Keluhan', 'Status'],
+                cells: k => [esc(fmtDate(k.tanggal)), esc(k.stasiun), esc(k.pengemudi), '<td class="wrap">' + esc(k.keluhan), badge(k.status ?? 'Pending')],
+                search: k => [k.tanggal, k.stasiun, k.pengemudi, k.keluhan, k.status].join(' '),
+                detail: k => ({ 'Tanggal': fmtDate(k.tanggal), 'Stasiun': k.stasiun, 'Pengemudi': k.pengemudi, 'Keluhan': k.keluhan, 'Status': k.status ?? 'Pending' })
             }
+        };
+        let activeTab = 'stasiun';
 
-            document.getElementById('detailModal').classList.add('active');
+        function renderTabs() {
+            $('tabs').innerHTML = Object.keys(TABS).map(k =>
+                '<button type="button" class="tab' + (k === activeTab ? ' active' : '') + '" onclick="setTab(\'' + k + '\')">' +
+                TABS[k].label + '<span class="n">' + TABS[k].data.length + '</span></button>').join('');
         }
 
-        function closeModal() {
-            document.getElementById('detailModal').classList.remove('active');
+        function renderTable() {
+            const t = TABS[activeTab];
+            const q = $('q').value.trim().toLowerCase();
+            const rows = t.data.filter(d => !q || t.search(d).toLowerCase().includes(q));
+
+            $('thead').innerHTML = '<tr>' + t.head.map(h => '<th>' + h + '</th>').join('') + '</tr>';
+            const body = $('tbody');
+            body.innerHTML = '';
+
+            if (!rows.length) {
+                body.innerHTML = '<tr class="no-hover"><td colspan="' + t.head.length + '" class="empty-state">' +
+                    (q ? 'Tidak ada hasil untuk "' + esc(q) + '"' : 'Belum ada data') + '</td></tr>';
+            } else {
+                rows.forEach(d => {
+                    const tr = document.createElement('tr');
+                    // sel yang diawali "<td class=" sudah berisi tag td sendiri (untuk teks panjang)
+                    tr.innerHTML = t.cells(d).map(c => c.startsWith('<td') ? c + '</td>' : '<td>' + c + '</td>').join('');
+                    tr.addEventListener('click', () => openModal(t, d));
+                    body.appendChild(tr);
+                });
+            }
+            $('rowCount').textContent = rows.length === t.data.length ? t.data.length + ' data' : rows.length + ' dari ' + t.data.length + ' data';
+            $('manageLink').href = t.link;
         }
+
+        function setTab(k) {
+            activeTab = k;
+            $('q').value = '';
+            renderTabs();
+            renderTable();
+            if (event && event.target && event.target.classList.contains('alert-chip')) {
+                document.querySelector('.tabs').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        $('q').addEventListener('input', renderTable);
+
+        // ===== MODAL =====
+        function openModal(tab, d) {
+            $('modalTitle').textContent = tab.title;
+            $('modalLink').href = tab.link;
+            $('modalContent').innerHTML = Object.entries(tab.detail(d))
+                .map(([k, v]) => '<dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd>').join('');
+            $('detailModal').classList.add('active');
+        }
+        function closeModal() { $('detailModal').classList.remove('active'); }
+        $('detailModal').addEventListener('click', e => { if (e.target.id === 'detailModal') closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        renderTabs();
+        renderTable();
     </script>
 
 </body>

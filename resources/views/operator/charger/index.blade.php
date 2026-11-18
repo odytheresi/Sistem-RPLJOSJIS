@@ -37,7 +37,6 @@
     .sidebar nav a {
         display: block;
         color: #e6f5ed;
-        text-decoration: none;
         padding: 12px 14px;
         border-radius: 10px;
         margin-bottom: 10px;
@@ -57,164 +56,98 @@
     /* ===== MAIN & TOPBAR ===== */
     .main { flex: 1; padding: 28px 32px; overflow-x: auto; min-width: 0; }
     .topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-bottom: 24px;
+        display: flex; justify-content: space-between; align-items: center;
+        gap: 12px; flex-wrap: wrap; margin-bottom: 22px;
     }
-    .topbar h2 { font-size: 22px; font-weight: 800; color: var(--text); }
+    .topbar h2 { font-size: 22px; font-weight: 800; }
     .topbar p { color: var(--muted); font-size: 12px; margin-top: 5px; }
-    .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .actions form { margin: 0; }
 
     .section-title { font-size: 16px; font-weight: 800; margin: 0; }
     .section-subtitle { color: var(--muted); font-size: 12px; margin-top: 5px; }
 
     /* ===== BUTTON ===== */
     .btn {
-        display: inline-block;
-        padding: 9px 16px;
-        border-radius: 9px;
-        border: 1px solid transparent;
-        font-size: 12px;
-        font-weight: 700;
-        font-family: inherit;
-        cursor: pointer;
-        background: var(--green);
-        color: #fff;
-        transition: .2s;
+        display: inline-block; padding: 9px 16px; border-radius: 9px; border: 1px solid transparent;
+        font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer;
+        background: var(--green); color: #fff; transition: .2s;
     }
     .btn:hover { background: var(--green-dark); transform: translateY(-2px); color: #fff; }
     .btn-light { background: #fff; color: var(--text); border-color: var(--line); }
     .btn-light:hover { background: #f1f5f9; color: var(--text); }
-    .btn-danger { background: #dc2626; color: #fff; }
-    .btn-danger:hover { background: #b91c1c; }
+    .btn-danger { background: #fff; color: #dc2626; border-color: #fecaca; }
+    .btn-danger:hover { background: #dc2626; color: #fff; }
     .btn-sm { padding: 6px 11px; font-size: 11px; }
 
     /* ===== ALERT ===== */
     .alert { padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; }
     .alert-success { background: #dcfce7; color: #166534; }
     .alert-error { background: #fee2e2; color: #b91c1c; }
-    .alert ul { margin: 6px 0 0 18px; }
 
     /* ===== PANEL ===== */
     .dashboard-panel {
-        background: white;
-        border: 1px solid var(--line);
-        border-radius: 15px;
-        overflow: hidden;
-        margin-bottom: 22px;
+        background: white; border: 1px solid var(--line); border-radius: 15px;
+        overflow: hidden; margin-bottom: 22px;
     }
-    .panel-header {
-        padding: 20px 22px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        border-bottom: 1px solid #edf0f5;
-        flex-wrap: wrap;
+
+    /* ===== TOOLBAR (filter + pencarian) ===== */
+    .toolbar {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid #edf0f5;
     }
-    .panel-header.tinted { background: linear-gradient(90deg, #eef8f2, #ffffff); }
-    .panel-body { padding: 20px 22px; }
-    .panel-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .panel-count {
-        padding: 6px 10px;
-        border-radius: 8px;
-        background: var(--green-soft);
-        color: var(--green-dark);
-        font-size: 11px;
-        font-weight: 700;
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+        display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px;
+        border: 1px solid var(--line); background: #fff; color: #475569;
+        font-size: 12px; font-weight: 700; text-transform: capitalize; transition: .2s;
     }
+    .chip:hover { border-color: #a6d8bf; color: var(--text); }
+    .chip.active { border-color: var(--green); background: var(--green-soft); color: var(--green-dark); box-shadow: 0 0 0 3px #3d9e7118; }
+    .chip .n {
+        min-width: 22px; padding: 1px 7px; border-radius: 10px; background: #f1f5f9;
+        color: #64748b; font-size: 11px; text-align: center;
+    }
+    .chip.active .n { background: #fff; color: var(--green-dark); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+    .dot.tersedia { background: #22c55e; }
+    .dot.digunakan { background: #3b82f6; }
+    .dot.perbaikan { background: #f59e0b; }
+    .dot.error { background: #dc2626; }
+
+    .search { display: flex; align-items: center; gap: 12px; }
+    .search input {
+        width: 260px; max-width: 100%; padding: 9px 13px; border: 1px solid var(--line); border-radius: 10px;
+        font-size: 12px; font-family: inherit; outline: none; background: #fff; color: var(--text); transition: .2s;
+    }
+    .search input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
+    .search .count { font-size: 11px; color: var(--muted); white-space: nowrap; }
 
     /* ===== TABLE ===== */
     .table-responsive { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
     th {
-        padding: 14px 18px;
-        text-align: left;
-        background: #f8fafc;
-        color: #78869b;
-        font-weight: 700;
-        border-bottom: 1px solid #edf0f5;
+        padding: 13px 18px; text-align: left; background: #f8fafc; color: #78869b;
+        font-weight: 700; border-bottom: 1px solid #edf0f5;
     }
-    td { padding: 15px 18px; border-bottom: 1px solid #f0f2f6; color: #475569; vertical-align: middle; }
+    td { padding: 14px 18px; border-bottom: 1px solid #f0f2f6; color: #475569; vertical-align: middle; }
     tbody tr:last-child td { border-bottom: 0; }
     tbody tr:hover td { background: #fafcff; }
     td strong { color: var(--text); }
-    .hint { color: #98a2b3; font-size: 11px; }
-    .empty { text-align: center; color: #98a2b3; padding: 28px !important; font-size: 13px; }
+    .hint { color: #98a2b3; font-size: 11px; display: block; margin-top: 2px; }
+    .empty { text-align: center; color: #98a2b3; padding: 30px !important; font-size: 13px; }
+    .power { font-weight: 700; color: var(--text); }
 
     /* ===== BADGE ===== */
     .badge {
-        display: inline-block;
-        padding: 5px 9px;
-        border-radius: 20px;
-        font-size: 10px;
-        font-weight: 700;
-        background: #f1f5f9;
-        color: #64748b;
-        text-transform: capitalize;
+        display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+        background: #f1f5f9; color: #64748b; text-transform: capitalize;
     }
-    .badge.green, .badge-tersedia { background: #dcfce7; color: #166534; }
-    .badge.orange, .badge-perbaikan { background: #ffedd5; color: #9a3412; }
-    .badge.red, .badge-error { background: #fee2e2; color: #b91c1c; }
-    .badge.blue, .badge-digunakan { background: #dbeafe; color: #1d4ed8; }
+    .badge-tersedia { background: #dcfce7; color: #166534; }
+    .badge-perbaikan { background: #ffedd5; color: #9a3412; }
+    .badge-error { background: #fee2e2; color: #b91c1c; }
+    .badge-digunakan { background: #dbeafe; color: #1d4ed8; }
 
-    /* ===== FILTER CARD (index charger) ===== */
-    .filter-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 14px;
-        margin-bottom: 22px;
-    }
-    .filter-card {
-        display: block;
-        background: white;
-        border: 1px solid var(--line);
-        border-radius: 15px;
-        padding: 18px;
-        box-shadow: 0 4px 16px #16274805;
-        color: var(--text);
-        transition: .2s;
-    }
-    .filter-card:hover { transform: translateY(-3px); border-color: #a6d8bf; color: var(--text); }
-    .filter-card.active { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
-    .filter-num { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
-    .filter-label { margin-top: 6px; font-size: 11px; color: #77849a; font-weight: 600; }
-
-    /* ===== FORM ===== */
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-    .form-grid .form-group { margin-bottom: 0; }
-    .form-grid { margin-bottom: 20px; }
-    .form-group label { font-weight: 700; font-size: 12px; color: #475569; }
-    .form-control {
-        padding: 11px 13px;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        font-size: 13px;
-        font-family: inherit;
-        background: #fff;
-        color: var(--text);
-        outline: none;
-        transition: .2s;
-        width: 100%;
-    }
-    .form-control:focus { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
-    .form-control.is-invalid { border-color: #dc2626; }
-    .field-error { color: #b91c1c; font-size: 11px; }
-    .form-actions { display: flex; gap: 10px; margin-top: 8px; }
-
-    /* ===== DETAIL LIST (show charger) ===== */
-    .detail { display: grid; grid-template-columns: 200px 1fr; row-gap: 14px; }
-    .detail dt { color: var(--muted); font-size: 12px; }
-    .detail dd { margin: 0; font-weight: 700; color: var(--text); }
-    .inline-status { display: flex; gap: 8px; align-items: center; }
-    .inline-status select { width: auto; }
-
-    .dashboard-footer { text-align: center; color: #98a2b3; font-size: 11px; padding: 10px; }
+    .actions { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+    .actions form { margin: 0; }
 
     @media (max-width: 900px) {
         body { flex-direction: column; }
@@ -222,9 +155,7 @@
         .main { padding: 22px 18px; }
     }
     @media (max-width: 640px) {
-        .form-grid { grid-template-columns: 1fr; }
-        .detail { grid-template-columns: 1fr; row-gap: 4px; }
-        .detail dd { margin-bottom: 10px; }
+        .search, .search input { width: 100%; }
     }
 </style>
 </head>
@@ -258,59 +189,59 @@
             <div class="alert alert-error">{{ session('error') }}</div>
         @endif
 
-        <div class="filter-grid">
-            <a class="filter-card {{ !$filter ? 'active' : '' }}" href="{{ route('operator.charger.index') }}">
-                <div class="filter-num">{{ $counts['semua'] }}</div>
-                <div class="filter-label">Semua</div>
-            </a>
-            @foreach (['tersedia', 'digunakan', 'perbaikan', 'error'] as $s)
-                <a class="filter-card {{ $filter === $s ? 'active' : '' }}" href="{{ route('operator.charger.index', ['status' => $s]) }}">
-                    <div class="filter-num">{{ $counts[$s] }}</div>
-                    <div class="filter-label"><span class="badge badge-{{ $s }}">{{ $s }}</span></div>
-                </a>
-            @endforeach
-        </div>
-
         <section class="dashboard-panel">
-            <div class="panel-header">
-                <div>
-                    <h3 class="section-title">Unit Charger</h3>
-                    <div class="section-subtitle">Daftar charger beserta konektor, daya, dan tarif berlaku.</div>
+
+            {{-- Filter status (server-side) + pencarian cepat (di halaman) --}}
+            <div class="toolbar">
+                <div class="chips">
+                    <a class="chip {{ !$filter ? 'active' : '' }}" href="{{ route('operator.charger.index') }}">
+                        Semua <span class="n">{{ $counts['semua'] }}</span>
+                    </a>
+                    @foreach (['tersedia', 'digunakan', 'perbaikan', 'error'] as $s)
+                        <a class="chip {{ $filter === $s ? 'active' : '' }}" href="{{ route('operator.charger.index', ['status' => $s]) }}">
+                            <span class="dot {{ $s }}"></span>{{ $s }} <span class="n">{{ $counts[$s] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+                <div class="search">
+                    <span class="count" id="rowCount">{{ $chargers->count() }} unit</span>
+                    <input type="text" id="searchCharger" placeholder="🔍 Cari kode, stasiun, konektor...">
                 </div>
             </div>
+
             <div class="table-responsive">
                 <table>
                     <thead>
                         <tr>
-                            <th>Kode</th>
+                            <th>Charger</th>
                             <th>Stasiun</th>
-                            <th>Konektor</th>
-                            <th>Daya</th>
+                            <th>Konektor &amp; Daya</th>
                             <th>Tarif Berlaku</th>
                             <th>Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="chargerBody">
                         @forelse ($chargers as $c)
                             @php
                                 $tarifAktif = $c->tarifs
                                     ->sortByDesc('berlaku_mulai')
                                     ->first(fn ($t) => \Carbon\Carbon::parse($t->berlaku_mulai)->lte(now()));
+                                $daya = rtrim(rtrim(number_format($c->daya_maks, 1, ',', '.'), '0'), ',');
                             @endphp
-                            <tr>
+                            <tr class="charger-row"
+                                data-search="{{ strtolower($c->kd_charger . ' ' . ($c->station->nama_st ?? '') . ' ' . ($c->konektor->nm_konektor ?? '') . ' ' . ($c->konektor->jenis_charging ?? '') . ' ' . $c->status) }}">
                                 <td><strong>{{ $c->kd_charger }}</strong></td>
                                 <td>{{ $c->station->nama_st ?? '-' }}</td>
                                 <td>
                                     {{ $c->konektor->nm_konektor ?? '-' }}
-                                    @if ($c->konektor?->jenis_charging)
-                                        <div class="hint">{{ $c->konektor->jenis_charging }}</div>
-                                    @endif
+                                    <span class="hint">
+                                        @if ($c->konektor?->jenis_charging){{ $c->konektor->jenis_charging }} · @endif<span class="power">{{ $daya }} kW</span>
+                                    </span>
                                 </td>
-                                <td>{{ rtrim(rtrim(number_format($c->daya_maks, 1, ',', '.'), '0'), ',') }} kW</td>
                                 <td>
                                     @if ($tarifAktif)
-                                        Rp {{ number_format($tarifAktif->harga_per_kWh, 0, ',', '.') }}/kWh
+                                        <strong>Rp {{ number_format($tarifAktif->harga_per_kWh, 0, ',', '.') }}</strong><span class="hint">per kWh</span>
                                     @else
                                         <span class="hint">Belum ada tarif</span>
                                     @endif
@@ -322,7 +253,7 @@
                                         <a href="{{ route('operator.charger.edit', $c->id_charger) }}" class="btn btn-light btn-sm">Edit</a>
                                         @if ($c->status !== 'digunakan')
                                             <form action="{{ route('operator.charger.destroy', $c->id_charger) }}" method="POST"
-                                                  onsubmit="return confirm('Hapus charger {{ $c->kd_charger }}?')">
+                                                  onsubmit="return confirm(@json('Hapus charger ' . $c->kd_charger . '?'))">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
@@ -332,12 +263,36 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="empty">Belum ada charger.</td></tr>
+                            <tr><td colspan="6" class="empty">Belum ada charger.</td></tr>
                         @endforelse
+                        <tr id="noResult" style="display:none"><td colspan="6" class="empty">Tidak ada charger yang cocok dengan pencarian.</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
     </main>
+
+    <script>
+        // Pencarian cepat pada data yang sedang ditampilkan (tidak mengubah filter server)
+        (function () {
+            const input = document.getElementById('searchCharger');
+            const rows = document.querySelectorAll('.charger-row');
+            const noResult = document.getElementById('noResult');
+            const count = document.getElementById('rowCount');
+            const total = rows.length;
+
+            input.addEventListener('input', function () {
+                const q = input.value.trim().toLowerCase();
+                let shown = 0;
+                rows.forEach(function (row) {
+                    const match = !q || row.dataset.search.includes(q);
+                    row.style.display = match ? '' : 'none';
+                    if (match) shown++;
+                });
+                noResult.style.display = (total > 0 && shown === 0) ? '' : 'none';
+                count.textContent = (q ? shown + ' dari ' + total : total) + ' unit';
+            });
+        })();
+    </script>
 </body>
 </html>
