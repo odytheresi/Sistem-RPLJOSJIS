@@ -1,13 +1,18 @@
 <?php
-
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MeController;
 use App\Http\Controllers\Api\KonfigSistemController;
+use App\Http\Controllers\Api\StationApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login']);
+
+//tambahan operator
+// Endpoint API untuk mengambil data detail stasiun, charger, konektor, dan tarif dalam format JSON
+Route::get('/stations/{id}', [StationApiController::class, 'show']);
+
 
 // NFR-01: semua route di bawah wajib token valid + sesi masih aktif
 Route::middleware(['auth:sanctum', 'sesi.aktif'])->group(function () {
@@ -39,3 +44,5 @@ Route::middleware(['auth:sanctum', 'sesi.aktif'])->group(function () {
         // konfigurasi & notifikasi: menyusul setelah struktur tabelnya jelas
     });
 });
+
+
