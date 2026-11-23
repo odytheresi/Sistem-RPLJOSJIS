@@ -1,0 +1,73 @@
+/* ==========================================================
+   EV ChargeHub - Tema warna (HANYA warna, tidak mengubah layout)
+
+   Persimmon     #E1932C
+   Cornsilk      #F0DF87
+   Glacier       #A0CED9
+   Malachite     #3D9E71
+   Deep Atlantic #133968
+
+   Pasang di <head> setelah Bootstrap (dan setelah <style> bawaan):
+   <link href="/css/theme.css" rel="stylesheet">
+   ========================================================== */
+
+:root {
+    /* Timpa warna bawaan Bootstrap dengan palet */
+    --bs-success: #3D9E71;   --bs-success-rgb: 61, 158, 113;   /* hijau  -> Malachite */
+    --bs-primary: #133968;   --bs-primary-rgb: 19, 57, 104;    /* biru   -> Deep Atlantic */
+    --bs-warning: #E1932C;   --bs-warning-rgb: 225, 147, 44;   /* kuning -> Persimmon */
+    --bs-info: #A0CED9;      --bs-info-rgb: 160, 206, 217;     /* cyan   -> Glacier */
+    --bs-dark: #133968;      --bs-dark-rgb: 19, 57, 104;       /* gelap  -> Deep Atlantic */
+    --bs-light: #FAF6E3;     --bs-light-rgb: 250, 246, 227;    /* latar  -> Cornsilk terang */
+    --bs-link-color: #133968;
+    --bs-link-hover-color: #3D9E71;
+}
+
+/* Tombol success / outline-success -> Malachite */
+.btn-success {
+    --bs-btn-bg: #3D9E71;
+    --bs-btn-border-color: #3D9E71;
+    --bs-btn-hover-bg: #318059;
+    --bs-btn-hover-border-color: #318059;
+    --bs-btn-active-bg: #318059;
+    --bs-btn-active-border-color: #318059;
+    --bs-btn-disabled-bg: #3D9E71;
+    --bs-btn-disabled-border-color: #3D9E71;
+    --bs-btn-focus-shadow-rgb: 61, 158, 113;
+}
+.btn-outline-success {
+    --bs-btn-color: #3D9E71;
+    --bs-btn-border-color: #3D9E71;
+    --bs-btn-hover-bg: #3D9E71;
+    --bs-btn-hover-border-color: #3D9E71;
+    --bs-btn-active-bg: #3D9E71;
+    --bs-btn-active-border-color: #3D9E71;
+    --bs-btn-focus-shadow-rgb: 61, 158, 113;
+}
+
+/* Tombol outline-primary -> Deep Atlantic */
+.btn-outline-primary {
+    --bs-btn-color: #133968;
+    --bs-btn-border-color: #133968;
+    --bs-btn-hover-bg: #133968;
+    --bs-btn-hover-border-color: #133968;
+    --bs-btn-active-bg: #133968;
+    --bs-btn-active-border-color: #133968;
+    --bs-btn-focus-shadow-rgb: 19, 57, 104;
+}
+
+/* Warna fokus input & checkbox */
+.form-control:focus,
+.form-select:focus {
+    border-color: #3D9E71;
+    box-shadow: 0 0 0 .25rem rgba(61, 158, 113, .25);
+}
+.form-check-input:checked {
+    background-color: #3D9E71;
+    border-color: #3D9E71;
+}
+
+/* Sidebar admin: hanya warna menu */
+.sidebar-link { color: #A0CED9; }
+.sidebar-link:hover { color: #fff; background: rgba(160, 206, 217, .15); }
+.sidebar-link.active { color: #fff; background: #3D9E71; }
