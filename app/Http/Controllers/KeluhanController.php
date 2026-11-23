@@ -75,7 +75,7 @@ class KeluhanController extends Controller
      */
     private function currentOperator(): Operator
     {
-        $operator = Operator::where('id_user', session('user_id'))->first();
+        $operator = Operator::where('id_user', auth()->user()->id_user)->first();
 
         if (!$operator) {
             throw new HttpResponseException(

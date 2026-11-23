@@ -17,7 +17,7 @@ class ChargerController extends Controller
 
     private function currentOperator(): Operator
     {
-        $operator = Operator::where('id_user', session('user_id'))->first();
+        $operator = Operator::where('id_user', auth()->user()->id_user)->first();
         abort_if(!$operator, 403, 'Akun ini bukan operator.');
 
         return $operator;

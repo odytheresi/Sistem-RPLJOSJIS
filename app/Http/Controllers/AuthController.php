@@ -2,61 +2,120 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Audit_Log;
+use App\Models\User;
 use Illuminate\Http\Request;
-use App\Models\Login;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
     public function showLoginForm()
     {
-        return view('auth.login');
+        return view('admin.login');
+    }
+
+    private function gagal(Request $request, string $pesan, int $status = 422)
+    {
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $pesan], $status);
+        }
+
+        return back()->withErrors(['identifier' => $pesan])->withInput();
     }
 
     public function login(Request $request)
     {
-        $request->validate([
-            'login' => 'required', 
-            'pass'  => 'required', 
+        $data = $request->validate([
+            'identifier' => 'required|string',
+            'password'   => 'required|string',
         ]);
 
-        // Cek apakah input berupa email atau nama
-        $fieldType = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'nma_user';
+        $user = User::with(['role.hakAkses', 'admin'])
+            ->where('identifier', trim($data['identifier']))
+            ->first();
 
-        // Cari user di database
-        $user = Login::where($fieldType, $request->login)->first();
+        // 1. Akun sedang terkunci
+        if ($user && $user->locked_until && now()->lt($user->locked_until)) {
+            $sisa = (int) ceil(now()->diffInMinutes($user->locked_until, false));
+            Audit_Log::catat('login_gagal', 'Akun terkunci', 'User', (string) $user->id_user, $user->id_user);
 
-        // Cek apakah user ada dan password teks biasa-nya cocok
-        if ($user && $user->pass === $request->pass) {
-            
-            // Cek status aktif
-            if ($user->status !== 'aktif') {
-                return back()->withErrors(['login' => 'Akun Anda sudah nonaktif.'])->withInput();
-            }
-
-            // SIMPAN SESI MANUAL (Model aman, tidak perlu diubah sama sekali!)
-            $request->session()->put('user_id', $user->user_id);
-            $request->session()->put('nma_user', $user->nma_user);
-            $request->session()->put('id_role', $user->id_role);
-            $request->session()->regenerate();
-
-            // BERHASIL -> Arahkan sesuai role
-            return match ($user->id_role) {
-                1 => redirect('/admin/dashboard'),
-                2 => redirect('/operator/dashboard'),
-                3 => redirect('/pengemudi/dashboard'),
-                default => redirect('/dashboard'),
-            };
+            return $this->gagal($request, "Akun terkunci. Coba lagi dalam {$sisa} menit.", 423);
         }
 
-        // Jika gagal, kembalikan ke form sambil membawa input sebelumnya pakai withInput()
-        return back()->withErrors([
-            'login' => 'Nama/Email atau kata sandi salah.',
-        ])->withInput();
+        // 2. Password salah atau user tidak ada
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
+            if ($user) {
+                $user->failed_login++;
+
+                if ($user->failed_login >= config('ev.max_login_gagal')) {
+                    $user->locked_until = now()->addMinutes(config('ev.kunci_menit'));
+                    $user->failed_login = 0;
+                }
+                $user->save();
+            }
+
+            Audit_Log::catat(
+                'login_gagal',
+                'Login gagal: ' . $data['identifier'],
+                'User',
+                $user ? (string) $user->id_user : null,
+                $user?->id_user
+            );
+
+            return $this->gagal($request, 'Identifier atau password salah.', 401);
+        }
+
+        // 3. Akun atau role nonaktif
+        if ($user->status !== 'aktif' || $user->role?->status !== 'aktif') {
+            Audit_Log::catat('login_gagal', 'Akun atau role nonaktif', 'User', (string) $user->id_user, $user->id_user);
+
+            return $this->gagal($request, 'Akun atau role nonaktif.', 403);
+        }
+
+        // 4. Berhasil
+        $user->forceFill(['failed_login' => 0, 'locked_until' => null])->save();
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        Audit_Log::catat('login', null, 'User', (string) $user->id_user, $user->id_user);
+
+        $nmaRole  = $user->role->nma_role;
+        $redirect = match ($nmaRole) {
+            'admin'    => '/admin/dashboard',
+            'operator' => route('operator.dashboard', [], false),
+            default    => '/pengemudi/dashboard',
+        };
+
+        if (! $request->expectsJson()) {
+            return redirect($redirect);
+        }
+
+        // Token hanya untuk admin (dipakai admin.js memanggil /api/...)
+        $token = null;
+        if ($nmaRole === 'admin') {
+            $user->tokens()->delete();
+            $token = $user->createToken('admin', ['*'], now()->addMinutes(config('ev.timeout_menit')))->plainTextToken;
+        }
+
+        return response()->json([
+            'token'    => $token,
+            'user'     => $user,
+            'redirect' => $redirect,
+        ]);
     }
 
     public function logout(Request $request)
     {
-        $request->session()->forget(['user_id', 'nma_user', 'id_role']);
+        $user = Auth::user();
+
+        if ($user) {
+            Audit_Log::catat('logout', null, 'User', (string) $user->id_user, $user->id_user);
+            $user->tokens()->delete();
+        }
+
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

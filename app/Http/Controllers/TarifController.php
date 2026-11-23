@@ -14,8 +14,8 @@ class TarifController extends Controller
 {
     private function currentOperator(): Operator
     {
-        $op = session('user_id')
-            ? Operator::where('id_user', session('user_id'))->first()
+        $op = auth()->user()->id_user
+            ? Operator::where('id_user', auth()->user()->id_user)->first()
             : null;
 
         if (!$op) {

@@ -36,6 +36,11 @@ class User extends Authenticatable
         return $this->hasOne(Admin::class, 'id_user', 'id_user');
     }
 
+    public function operator(): HasOne
+    {
+        return $this->hasOne(Operator::class, 'id_user', 'id_user');
+    }
+
     public function notifikasi(): HasMany
     {
         return $this->hasMany(Notifikasi::class, 'id_user', 'id_user');

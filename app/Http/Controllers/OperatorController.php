@@ -5,28 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\ChargingStation;
 use App\Models\Operator;
 use Carbon\Carbon;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class OperatorController extends Controller
 {
-    public function index(): View|RedirectResponse
+    /**
+     * Operator milik user yang sedang login (sesi Auth::login).
+     */
+    private function operatorLogin(): Operator
     {
-        // Login proyek ini memakai sesi manual
-        $userId = session('user_id');
+        $op = Operator::where('id_user', auth()->user()->id_user)->first();
 
-        if (!$userId) {
-            return redirect('/login');
-        }
+        abort_unless($op, 403, 'Akun ini belum terdaftar sebagai operator.');
 
-        $op = Operator::where('id_user', $userId)->first();
+        return $op;
+    }
 
-        if (!$op) {
-            return redirect('/login')->withErrors([
-                'login' => 'Akun ini belum terdaftar sebagai operator.',
-            ]);
-        }
+    public function index(): View
+    {
+        $op = $this->operatorLogin();
 
         $operator = [
             'id_operator' => $op->id_operator,
@@ -61,7 +59,7 @@ class OperatorController extends Controller
                 'charger.daya_maks',
                 'charger.status',
                 'charging_station.nama_st',
-                'tipe_konektor.nm_konektor'
+                'tipe_konektor.nama_konektor as nm_konektor'
             )
             ->orderBy('charger.id_charger')
             ->get()
@@ -100,14 +98,14 @@ class OperatorController extends Controller
         $keluhan = DB::table('keluhan')
             ->leftJoin('charging_station', 'keluhan.id_station', '=', 'charging_station.id_station')
             ->leftJoin('pengemudi', 'keluhan.id_pengemudi', '=', 'pengemudi.id_pengemudi')
-            ->leftJoin('login', 'pengemudi.user_id', '=', 'login.user_id')
+            ->leftJoin('user', 'pengemudi.user_id', '=', 'user.id_user')
             ->whereIn('keluhan.id_station', $stationIds)
             ->select(
                 'keluhan.created_at',
                 'keluhan.isi_keluhan',
                 'keluhan.status',
                 'charging_station.nama_st',
-                'login.nma_user'
+                'user.identifier as nma_user'
             )
             ->orderByDesc('keluhan.created_at')
             ->limit(10)
@@ -147,21 +145,9 @@ class OperatorController extends Controller
         ));
     }
 
-    public function lokasiStasiun(): View|RedirectResponse
+    public function lokasiStasiun(): View
     {
-        $userId = session('user_id');
-
-        if (!$userId) {
-            return redirect('/login');
-        }
-
-        $op = Operator::where('id_user', $userId)->first();
-
-        if (!$op) {
-            return redirect('/login')->withErrors([
-                'login' => 'Akun ini belum terdaftar sebagai operator.',
-            ]);
-        }
+        $op = $this->operatorLogin();
 
         $chargingStations = ChargingStation::where('id_operator', $op->id_operator)
             ->with(['chargers.konektor', 'chargers.tarifs'])
