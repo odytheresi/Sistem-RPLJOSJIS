@@ -27,18 +27,13 @@ Route::middleware(['auth:sanctum', 'sesi.aktif'])->group(function () {
         Route::put('role/{id}/hak-akses', [AdminController::class, 'simpanHakAkses'])->middleware('akses:role_hak_akses,ubah');
         Route::put('role/{id}/status',    [AdminController::class, 'ubahStatusRole'])->middleware('akses:role_hak_akses,ubah');
 
-          Route::get('konfigurasi', [KonfigSistemController::class, 'index'])
-        ->middleware('akses:konfigurasi_sistem,lihat');
-
-        Route::put('konfigurasi/{id}', [KonfigSistemController::class, 'update'])
-            ->middleware('akses:konfigurasi_sistem,ubah');
 
         Route::get('laporan', [AdminController::class, 'laporan'])
             ->middleware('akses:laporan,lihat');
 
-        Route::get('laporan/csv', [AdminController::class, 'laporanCsv'])
+        Route::get('laporan/pdf', [AdminController::class, 'laporanPdf'])
             ->middleware('akses:laporan,lihat');
-
+       
         Route::get('audit-log', [AdminController::class, 'auditLog'])->middleware('akses:audit_log,lihat');
 
         // konfigurasi & notifikasi: menyusul setelah struktur tabelnya jelas

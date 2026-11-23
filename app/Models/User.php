@@ -20,7 +20,10 @@ class User extends Authenticatable
 
     protected function casts(): array
     {
-        return ['password' => 'hashed'];
+        return [
+            'password'     => 'hashed',
+            'locked_until' => 'datetime',
+        ];
     }
 
     public function role(): BelongsTo
@@ -40,6 +43,6 @@ class User extends Authenticatable
 
     public function auditLog(): HasMany
     {
-        return $this->hasMany(AuditLog::class, 'id_user', 'id_user');
+        return $this->hasMany(Audit_Log::class, 'id_user', 'id_user');
     }
 }

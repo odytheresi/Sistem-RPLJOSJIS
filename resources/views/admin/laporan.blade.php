@@ -15,8 +15,8 @@
     </div>
     <div class="col-12 col-md-6 d-flex align-items-end gap-2">
         <button class="btn btn-success">Tampilkan</button>
-        <button type="button" id="btnCsv" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Unduh CSV
+        <button type="button" id="btnPdf" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Unduh PDF
         </button>
     </div>
 </form>
@@ -83,16 +83,16 @@ async function muatLaporan() {
     } catch (e) { alert(e.message); }
 }
 
-$('btnCsv').onclick = async () => {
+$('btnPdf').onclick = async () => {
     const p = new URLSearchParams({ dari: $('fDari').value, sampai: $('fSampai').value });
     try {
-        const res = await fetch('/api/admin/laporan/csv?' + p, { headers: headers() });
+        const res = await fetch('/api/admin/laporan/pdf?' + p, { headers: headers() });
         if (!res.ok) throw new Error('Gagal mengunduh laporan.');
 
         const url = URL.createObjectURL(await res.blob());
         const a = document.createElement('a');
         a.href = url;
-        a.download = `laporan-${$('fDari').value}-${$('fSampai').value}.csv`;
+        a.download = `laporan-${$('fDari').value}-${$('fSampai').value}.pdf`;
         a.click();
         URL.revokeObjectURL(url);
     } catch (e) { alert(e.message); }

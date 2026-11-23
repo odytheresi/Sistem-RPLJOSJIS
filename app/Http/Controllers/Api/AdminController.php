@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminController extends Controller
 {
@@ -126,7 +127,7 @@ class AdminController extends Controller
     }
 
     // ---------- Laporan ----------
-        public function laporan(Request $request): JsonResponse
+         private function dataLaporan(Request $request): array
         {
             $request->validate([
                 'dari'   => 'nullable|date',
@@ -139,7 +140,7 @@ class AdminController extends Controller
             $log = fn () => Audit_Log::whereDate('waktu', '>=', $dari)
                                     ->whereDate('waktu', '<=', $sampai);
 
-            return response()->json([
+            return [
                 'periode'         => compact('dari', 'sampai'),
                 'total_aktivitas' => $log()->count(),
                 'per_aktivitas'   => $log()->select('aktivitas', DB::raw('count(*) as total'))
@@ -151,35 +152,32 @@ class AdminController extends Controller
                                         ->orderByDesc('total')->limit(10)->get(),
                 'user_per_role'   => Role::withCount('users')->get()
                                         ->map(fn ($r) => ['role' => $r->nma_role, 'total' => $r->users_count]),
-            ]);
+            ];
         }
 
-        public function laporanCsv(Request $request)
-        {
-            $request->validate([
-                'dari'   => 'required|date',
-                'sampai' => 'required|date|after_or_equal:dari',
-            ]);
+    // Untuk tampilan di layar (JSON)
+    public function laporan(Request $request): JsonResponse
+    {
+        return response()->json($this->dataLaporan($request));
+    }
 
-            $this->catat($request, 'ekspor_laporan', 'Laporan', $request->dari . '_' . $request->sampai);
+    // Untuk unduhan PDF
+    public function laporanPdf(Request $request)
+    {
+        $request->validate([
+            'dari'   => 'required|date',
+            'sampai' => 'required|date|after_or_equal:dari',
+        ]);
 
-            return response()->streamDownload(function () use ($request) {
-                $out = fopen('php://output', 'w');
-                fputcsv($out, ['Waktu', 'User', 'Aktivitas', 'Entitas', 'ID Referensi', 'Keterangan']);
+        $data = $this->dataLaporan($request);
 
-                Audit_Log::with('user')
-                    ->whereDate('waktu', '>=', $request->dari)
-                    ->whereDate('waktu', '<=', $request->sampai)
-                    ->chunkById(500, function ($rows) use ($out) {
-                        foreach ($rows as $l) {
-                            fputcsv($out, [$l->waktu, $l->user->identifier ?? '-', $l->aktivitas,
-                                $l->entitas_terkait, $l->id_referensi, $l->keterangan]);
-                        }
-                    }, 'id_audit');
+        $this->catat($request, 'ekspor_laporan', 'Laporan', $request->dari . '_' . $request->sampai);
 
-                fclose($out);
-            }, "laporan-aktivitas-{$request->dari}-{$request->sampai}.csv", ['Content-Type' => 'text/csv']);
-        }
+        return Pdf::loadView('admin.laporan_pdf', $data)
+            ->setPaper('a4', 'portrait')
+            ->download("laporan-aktivitas-{$request->dari}-{$request->sampai}.pdf");
+    }
+    
 
     // ---------- Audit log (FR-13) ----------
     public function auditLog(Request $request): JsonResponse
