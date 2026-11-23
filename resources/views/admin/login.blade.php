@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- DIUBAH: tambah meta csrf -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login | EV Charging</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -175,7 +177,8 @@
     const togglePassword = document.getElementById('togglePassword');
     const passwordIcon = document.getElementById('passwordIcon');
 
-    const redirectByRole = { admin: '/admin/dashboard' };
+    // DIUBAH: baris "const redirectByRole = { admin: '/admin/dashboard' };" dihapus,
+    // karena tujuan redirect sekarang ditentukan server (data.redirect)
 
     togglePassword.addEventListener('click', function () {
         if (passwordInput.type === 'password') {
@@ -205,9 +208,14 @@
         loginButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
 
         try {
-            const response = await fetch('/api/login', {
+            // DIUBAH: ke /login (web), kirim CSRF token, redirect sesuai role dari server
+            const response = await fetch('/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
                 // PENTING: AuthController menggunakan "identifier"
                 body: JSON.stringify({ identifier: username, password: password })
             });
@@ -218,10 +226,15 @@
                 throw new Error(data.message || 'Username atau password salah.');
             }
 
-            localStorage.setItem('token', data.token);
+            // Token hanya ada untuk admin; operator memakai sesi web
+            if (data.token) {
+                localStorage.setItem('token', data.token);
+            } else {
+                localStorage.removeItem('token');
+            }
             localStorage.setItem('user', JSON.stringify(data.user));
 
-            window.location.href = redirectByRole.admin;
+            window.location.href = data.redirect;
 
         } catch (error) {
             errorText.textContent = error.message;
