@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'akses' => \App\Http\Middleware\CekHakAkses::class,
             'sesi.aktif' => \App\Http\Middleware\SesiAktif::class,
+            'cekrole' => \App\Http\Middleware\CekRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
