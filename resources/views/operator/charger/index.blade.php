@@ -149,6 +149,14 @@
     .actions { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
     .actions form { margin: 0; }
 
+    /* ===== PAGINATION ===== */
+    .pager-wrap { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:14px 20px; border-top:1px solid #edf0f5; }
+    .pager { display:flex; gap:6px; flex-wrap:wrap; }
+    .pg { padding:7px 12px; border-radius:8px; border:1px solid var(--line); background:#fff; color:#475569; font-size:12px; font-weight:700; }
+    a.pg:hover { border-color:#a6d8bf; color:var(--text); }
+    .pg.active { background:var(--green); border-color:var(--green); color:#fff; }
+    .pg.disabled { color:#cbd5e1; cursor:default; }
+
     @media (max-width: 900px) {
         body { flex-direction: column; }
         .sidebar { width: 100%; }
@@ -194,19 +202,20 @@
             {{-- Filter status (server-side) + pencarian cepat (di halaman) --}}
             <div class="toolbar">
                 <div class="chips">
-                    <a class="chip {{ !$filter ? 'active' : '' }}" href="{{ route('operator.charger.index') }}">
+                    <a class="chip {{ !$filter ? 'active' : '' }}" href="{{ route('operator.charger.index', array_filter(['q' => $q])) }}">
                         Semua <span class="n">{{ $counts['semua'] }}</span>
                     </a>
                     @foreach (['tersedia', 'digunakan', 'perbaikan', 'error'] as $s)
-                        <a class="chip {{ $filter === $s ? 'active' : '' }}" href="{{ route('operator.charger.index', ['status' => $s]) }}">
+                        <a class="chip {{ $filter === $s ? 'active' : '' }}" href="{{ route('operator.charger.index', array_filter(['status' => $s, 'q' => $q])) }}">
                             <span class="dot {{ $s }}"></span>{{ $s }} <span class="n">{{ $counts[$s] }}</span>
                         </a>
                     @endforeach
                 </div>
-                <div class="search">
-                    <span class="count" id="rowCount">{{ $chargers->count() }} unit</span>
-                    <input type="text" id="searchCharger" placeholder="🔍 Cari kode, stasiun, konektor...">
-                </div>
+                <form method="GET" action="{{ route('operator.charger.index') }}" class="search">
+                    @if ($filter)<input type="hidden" name="status" value="{{ $filter }}">@endif
+                    <span class="count">{{ $chargers->total() }} unit</span>
+                    <input type="text" name="q" value="{{ $q }}" placeholder="🔍 Cari kode, stasiun, konektor... (Enter)">
+                </form>
             </div>
 
             <div class="table-responsive">
@@ -229,12 +238,11 @@
                                     ->first(fn ($t) => \Carbon\Carbon::parse($t->berlaku_mulai)->lte(now()));
                                 $daya = rtrim(rtrim(number_format($c->daya_maks, 1, ',', '.'), '0'), ',');
                             @endphp
-                            <tr class="charger-row"
-                                data-search="{{ strtolower($c->kd_charger . ' ' . ($c->station->nama_st ?? '') . ' ' . ($c->konektor->nm_konektor ?? '') . ' ' . ($c->konektor->jenis_charging ?? '') . ' ' . $c->status) }}">
+                            <tr>
                                 <td><strong>{{ $c->kd_charger }}</strong></td>
                                 <td>{{ $c->station->nama_st ?? '-' }}</td>
                                 <td>
-                                    {{ $c->konektor->nm_konektor ?? '-' }}
+                                    {{ $c->konektor->nama_konektor ?? '-' }}
                                     <span class="hint">
                                         @if ($c->konektor?->jenis_charging){{ $c->konektor->jenis_charging }} · @endif<span class="power">{{ $daya }} kW</span>
                                     </span>
@@ -262,13 +270,19 @@
                                     </div>
                                 </td>
                             </tr>
-                        @empty
-                            <tr><td colspan="6" class="empty">Belum ada charger.</td></tr>
-                        @endforelse
-                        <tr id="noResult" style="display:none"><td colspan="6" class="empty">Tidak ada charger yang cocok dengan pencarian.</td></tr>
+                       @empty
+                        <tr><td colspan="6" class="empty">{{ $q ? 'Tidak ada charger yang cocok dengan pencarian.' : 'Belum ada charger.' }}</td></tr>
+                      @endforelse
                     </tbody>
                 </table>
             </div>
+
+             @if ($chargers->total() > 0)
+                <div class="pager-wrap">
+                    <span class="hint">Menampilkan {{ $chargers->firstItem() }}–{{ $chargers->lastItem() }} dari {{ $chargers->total() }} charger</span>
+                    {{ $chargers->links('vendor.pagination.ev') }}
+                </div>
+            @endif
         </section>
     </main>
 

@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Audit_Log;
 use App\Models\HakAkses;
-// use App\Models\Notifikasi;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema; 
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminController extends Controller
@@ -127,21 +128,78 @@ class AdminController extends Controller
     }
 
     // ---------- Laporan ----------
-         private function dataLaporan(Request $request): array
+    private function dataLaporan(Request $request): array
         {
             $request->validate([
                 'dari'   => 'nullable|date',
                 'sampai' => 'nullable|date|after_or_equal:dari',
             ]);
 
-            $dari   = $request->input('dari', now()->subDays(29)->toDateString());
+            // FR-07: default periode 3 bulan terakhir
+            $dari   = $request->input('dari', now()->subMonths(3)->toDateString());
             $sampai = $request->input('sampai', today()->toDateString());
 
-            $log = fn () => Audit_Log::whereDate('waktu', '>=', $dari)
-                                    ->whereDate('waktu', '<=', $sampai);
+            $awal  = Carbon::parse($dari)->startOfDay();
+            $akhir = Carbon::parse($sampai)->endOfDay();
+
+            // ===== 1. Sesi charging per bulan (tunggu tabel dari pengemudi) =====
+            $sesiPerBulan = collect();
+            if (Schema::hasTable('sesi_charging')) {
+                $sesiPerBulan = DB::table('sesi_charging')
+                    ->whereBetween('waktu_mulai', [$awal, $akhir])
+                    ->select(
+                        DB::raw("DATE_FORMAT(waktu_mulai, '%Y-%m') as bulan"),
+                        DB::raw('COUNT(*) as jumlah_sesi'),
+                        DB::raw('COALESCE(SUM(energi_kwh), 0) as total_kwh')
+                    )
+                    ->groupBy('bulan')->orderBy('bulan')->get();
+            }
+
+            // ===== 2. Pendapatan per stasiun (tunggu tabel dari pengemudi) =====
+            $pendapatan = collect();
+            if (Schema::hasTable('transaksi') && Schema::hasTable('sesi_charging')) {
+                $pendapatan = DB::table('transaksi as t')
+                    ->join('sesi_charging as s', 's.id_sesi', '=', 't.id_sesi')
+                    ->join('charger as c', 'c.id_charger', '=', 's.id_charger')
+                    ->join('charging_station as st', 'st.id_stasiun', '=', 'c.id_stasiun')
+                    ->where('t.status', 'berhasil')
+                    ->whereBetween('t.waktu_bayar', [$awal, $akhir])
+                    ->select(
+                        'st.nama_stasiun as stasiun',
+                        DB::raw('COUNT(t.id_transaksi) as jumlah_transaksi'),
+                        DB::raw('SUM(t.jumlah) as total_pendapatan')
+                    )
+                    ->groupBy('st.id_stasiun', 'st.nama_stasiun')
+                    ->orderByDesc('total_pendapatan')->get();
+            }
+
+            // ===== 3. Riwayat kerusakan charger (bisa jalan sekarang) =====
+            $kerusakan = collect();
+            if (Schema::hasTable('gangguan')) {
+                $kerusakan = DB::table('gangguan as g')
+                    ->join('charger as c', 'c.id_charger', '=', 'g.id_charger')
+                    ->join('charging_station as st', 'st.id_stasiun', '=', 'c.id_stasiun')
+                    ->whereBetween('g.waktu_lapor', [$awal, $akhir])
+                    ->select(
+                        'st.nama_stasiun as stasiun',
+                        'c.kode_charger as charger',
+                        'g.deskripsi', 'g.waktu_lapor', 'g.waktu_selesai', 'g.status',
+                        DB::raw('TIMESTAMPDIFF(HOUR, g.waktu_lapor, COALESCE(g.waktu_selesai, NOW())) as durasi_jam')
+                    )
+                    ->orderByDesc('g.waktu_lapor')->get();
+            }
+
+            // ===== 4. Aktivitas sistem (laporan lama kamu) =====
+            $log = fn () => Audit_Log::whereBetween('waktu', [$awal, $akhir]);
 
             return [
-                'periode'         => compact('dari', 'sampai'),
+                'periode'                => compact('dari', 'sampai'),
+
+                'sesi_per_bulan'         => $sesiPerBulan,
+                'pendapatan_per_stasiun' => $pendapatan,
+                'total_pendapatan'       => (float) $pendapatan->sum('total_pendapatan'),
+                'kerusakan'              => $kerusakan,
+
                 'total_aktivitas' => $log()->count(),
                 'per_aktivitas'   => $log()->select('aktivitas', DB::raw('count(*) as total'))
                                         ->groupBy('aktivitas')->orderByDesc('total')->get(),
@@ -150,11 +208,8 @@ class AdminController extends Controller
                 'user_teraktif'   => $log()->select('id_user', DB::raw('count(*) as total'))
                                         ->groupBy('id_user')->with('user:id_user,identifier')
                                         ->orderByDesc('total')->limit(10)->get(),
-                'user_per_role'   => Role::withCount('users')->get()
-                                        ->map(fn ($r) => ['role' => $r->nma_role, 'total' => $r->users_count]),
             ];
         }
-
     // Untuk tampilan di layar (JSON)
     public function laporan(Request $request): JsonResponse
     {

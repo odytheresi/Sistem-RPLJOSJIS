@@ -53,7 +53,7 @@
             @foreach ($konektors as $konektor)
                 <option value="{{ $konektor->id_konektor }}"
                     @selected((string) old('id_konektor', $charger->id_konektor ?? '') === (string) $konektor->id_konektor)>
-                    {{ $konektor->nm_konektor }}
+                    {{ $konektor->nama_konektor }}
                 </option>
             @endforeach
         </select>

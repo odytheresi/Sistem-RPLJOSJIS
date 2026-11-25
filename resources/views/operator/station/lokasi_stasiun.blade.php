@@ -109,7 +109,7 @@
                         tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Belum ada perangkat charger di stasiun ini.</td></tr>`;
                     } else {
                         station.chargers.forEach(charger => {
-                            let konektorName = charger.tipe_konektor ? charger.tipe_konektor.nm_konektor : '-';
+                            let konektorName = charger.tipe_konektor ? charger.tipe_konektor.nama_konektor : '-';
                             let jenisCharging = charger.tipe_konektor ? charger.tipe_konektor.jenis_charging : '-';
                             
                             // Mendapatkan tarif terbaru

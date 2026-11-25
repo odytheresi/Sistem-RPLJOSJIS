@@ -32,7 +32,7 @@ class ChargingStationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'nama_station' => [
+            'nama_st' => [
                 'required',
                 'string',
                 'max:100'

@@ -200,7 +200,7 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">Tipe Konektor</div>
-                        <div class="info-value">{{ $perbaikan->charger->konektor->nm_konektor ?? '-' }}</div>
+                        <div class="info-value">{{ $perbaikan->charger->konektor->nama_konektor ?? '-' }}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Daya Charger</div>

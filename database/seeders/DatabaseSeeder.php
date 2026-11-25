@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             AdminSeeder::class,
             OperatorSeeder::class,
+            TipeKonektorSeeder::class,
+            ChargingStationSeeder::class,
             HakAksesSeeder::class,
         ]);
     }

@@ -171,10 +171,10 @@
                                 $terlambat = $item->status === 'dijadwalkan' && $tglJadwal->lt(today());
                             @endphp
                             <tr class="maint-row" data-status="{{ $item->status }}"
-                                data-search="{{ strtolower(($item->charger->kd_charger ?? '') . ' ' . ($item->charger->station->nama_st ?? '') . ' ' . ($item->charger->konektor->nm_konektor ?? '') . ' ' . $item->jenis_maintenance . ' ' . $item->status) }}">
+                                data-search="{{ strtolower(($item->charger->kd_charger ?? '') . ' ' . ($item->charger->station->nama_st ?? '') . ' ' . ($item->charger->konektor->nama_konektor ?? '') . ' ' . $item->jenis_maintenance . ' ' . $item->status) }}">
                                 <td>
                                     <strong>{{ $item->charger->kd_charger ?? '-' }}</strong>
-                                    <span class="hint">{{ $item->charger->station->nama_st ?? '-' }} · {{ $item->charger->konektor->nm_konektor ?? '-' }}</span>
+                                    <span class="hint">{{ $item->charger->station->nama_st ?? '-' }} · {{ $item->charger->konektor->nama_konektor ?? '-' }}</span>
                                 </td>
                                 <td>{{ $item->jenis_maintenance }}</td>
                                 <td>

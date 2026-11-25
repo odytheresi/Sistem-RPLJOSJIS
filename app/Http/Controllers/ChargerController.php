@@ -105,18 +105,30 @@ class ChargerController extends Controller
         ];
 
         $filter = $request->query('status');
+        $q = trim((string) $request->query('q', ''));
 
         $chargers = Charger::with(['station', 'konektor', 'tarifs'])
             ->whereIn('id_station', $stationIds)
             ->when(
                 in_array($filter, ['tersedia', 'digunakan', 'perbaikan', 'error'], true),
-                fn ($q) => $q->where('status', $filter)
+                fn ($query) => $query->where('status', $filter)
             )
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($w) use ($q) {
+                    $w->where('kd_charger', 'like', "%{$q}%")
+                      ->orWhere('status', 'like', "%{$q}%")
+                      ->orWhereHas('station', fn ($s) => $s->where('nama_st', 'like', "%{$q}%"))
+                      ->orWhereHas('konektor', fn ($k) => $k
+                          ->where('nama_konektor', 'like', "%{$q}%")
+                          ->orWhere('jenis_charging', 'like', "%{$q}%"));
+                });
+            })
             ->orderBy('id_station')
             ->orderBy('kd_charger')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('operator.charger.index', compact('chargers', 'counts', 'filter'));
+        return view('operator.charger.index', compact('chargers', 'counts', 'filter', 'q'));
     }
 
     public function create()
@@ -125,7 +137,7 @@ class ChargerController extends Controller
 
         return view('operator.charger.create', [
             'stations'  => $this->activeStations($operator),
-            'konektors' => TipeKonektor::orderBy('nm_konektor')->get(),
+            'konektors' => TipeKonektor::orderBy('nama_konektor')->get(),
         ]);
     }
 
@@ -164,7 +176,7 @@ class ChargerController extends Controller
         return view('operator.charger.edit', [
             'charger'   => $charger,
             'stations'  => $stations,
-            'konektors' => TipeKonektor::orderBy('nm_konektor')->get(),
+            'konektors' => TipeKonektor::orderBy('nama_konektor')->get(),
         ]);
     }
 
