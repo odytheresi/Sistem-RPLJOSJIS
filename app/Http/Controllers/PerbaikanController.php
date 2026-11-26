@@ -15,22 +15,13 @@ class PerbaikanController extends Controller
 {
     public function index(): View
     {
-        $operator = $this->currentOperator();
+        $this->currentOperator();
 
         $perbaikan = Perbaikan::with([
             'charger.station',
             'charger.konektor',
             'keluhan'
         ])
-        ->whereHas(
-            'charger.station',
-            function ($query) use ($operator) {
-                $query->where(
-                    'id_operator',
-                    $operator->id_operator
-                );
-            }
-        )
         ->latest('tgl_jadwal')
         ->get();
 
@@ -42,27 +33,11 @@ class PerbaikanController extends Controller
 
     public function create(): View
     {
-        $operator = $this->currentOperator();
+        $this->currentOperator();
 
-        $chargers = Charger::with('station')
-            ->whereHas('station', function ($query) use ($operator) {
-                $query->where(
-                    'id_operator',
-                    $operator->id_operator
-                );
-            })
-            ->get();
+        $chargers = Charger::with('station')->get();
 
-        $keluhan = Keluhan::whereHas(
-            'station',
-            function ($query) use ($operator) {
-                $query->where(
-                    'id_operator',
-                    $operator->id_operator
-                );
-            }
-        )
-        ->whereIn('status', [
+        $keluhan = Keluhan::whereIn('status', [
             'menunggu',
             'diproses'
         ])
@@ -79,6 +54,8 @@ class PerbaikanController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->currentOperator();
+
         $validated = $request->validate([
             'id_charger' => [
                 'required',
@@ -107,7 +84,7 @@ class PerbaikanController extends Controller
             ],
         ]);
 
-        $charger = $this->getOwnedCharger(
+        $charger = $this->findCharger(
             $validated['id_charger']
         );
 
@@ -156,7 +133,7 @@ class PerbaikanController extends Controller
         Perbaikan $perbaikan
     ): View {
 
-        $this->checkOwner($perbaikan);
+        $this->currentOperator();
 
         $perbaikan->load([
             'charger.station',
@@ -174,28 +151,11 @@ class PerbaikanController extends Controller
         Perbaikan $perbaikan
     ): View {
 
-        $this->checkOwner($perbaikan);
+        $this->currentOperator();
 
-        $operator = $this->currentOperator();
+        $chargers = Charger::with('station')->get();
 
-        $chargers = Charger::with('station')
-            ->whereHas('station', function ($query) use ($operator) {
-                $query->where(
-                    'id_operator',
-                    $operator->id_operator
-                );
-            })
-            ->get();
-
-        $keluhan = Keluhan::whereHas(
-            'station',
-            function ($query) use ($operator) {
-                $query->where(
-                    'id_operator',
-                    $operator->id_operator
-                );
-            }
-        )->get();
+        $keluhan = Keluhan::get();
 
         return view(
             'operator.perbaikan.edit',
@@ -212,7 +172,7 @@ class PerbaikanController extends Controller
         Perbaikan $perbaikan
     ): RedirectResponse {
 
-        $this->checkOwner($perbaikan);
+        $this->currentOperator();
 
         $validated = $request->validate([
             'id_charger' => [
@@ -246,7 +206,7 @@ class PerbaikanController extends Controller
             ],
         ]);
 
-        $charger = $this->getOwnedCharger(
+        $charger = $this->findCharger(
             $validated['id_charger']
         );
 
@@ -300,7 +260,7 @@ class PerbaikanController extends Controller
         Perbaikan $perbaikan
     ): RedirectResponse {
 
-        $this->checkOwner($perbaikan);
+        $this->currentOperator();
 
         $perbaikan->delete();
 
@@ -313,7 +273,7 @@ class PerbaikanController extends Controller
     }
 
     /**
-     * Ambil operator dari sesi login manual (session 'user_id' diisi AuthController).
+     * Memastikan yang login adalah operator.
      */
     private function currentOperator(): Operator
     {
@@ -330,33 +290,17 @@ class PerbaikanController extends Controller
         return $operator;
     }
 
-    private function getOwnedCharger(
+    /**
+     * Ambil charger tanpa batasan kepemilikan operator (404 kalau tidak ada).
+     */
+    private function findCharger(
         int $chargerId
     ): Charger {
-
-        $operatorId = $this->currentOperator()->id_operator;
 
         return Charger::where(
             'id_charger',
             $chargerId
         )
-        ->whereHas('station', function ($query) use ($operatorId) {
-            $query->where(
-                'id_operator',
-                $operatorId
-            );
-        })
         ->firstOrFail();
-    }
-
-    private function checkOwner(
-        Perbaikan $perbaikan
-    ): void {
-
-        abort_unless(
-            (int) $perbaikan->charger->station->id_operator ===
-            (int) $this->currentOperator()->id_operator,
-            403
-        );
     }
 }

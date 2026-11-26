@@ -1,22 +1,19 @@
 <?php
 use App\Http\Controllers\Api\AdminController;
-use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminAuthController;
 use App\Http\Controllers\Api\MeController;
-use App\Http\Controllers\Api\KonfigSistemController;
 use App\Http\Controllers\Api\StationApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('login', [AuthController::class, 'login']);
+Route::post('login', [AdminAuthController::class, 'login']);
 
-//tambahan operator
-// Endpoint API untuk mengambil data detail stasiun, charger, konektor, dan tarif dalam format JSON
+// tambahan operator
 Route::get('/stations/{id}', [StationApiController::class, 'show']);
-
 
 // NFR-01: semua route di bawah wajib token valid + sesi masih aktif
 Route::middleware(['auth:sanctum', 'sesi.aktif'])->group(function () {
-    Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('logout', [AdminAuthController::class, 'logout']);
     Route::get('user', fn (Request $r) => $r->user());
     Route::get('me/hak-akses', [MeController::class, 'hakAkses']);
 
@@ -24,25 +21,13 @@ Route::middleware(['auth:sanctum', 'sesi.aktif'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('ringkasan', [AdminController::class, 'ringkasan'])->middleware('akses:dashboard,lihat');
 
-        Route::get('user',           [AdminController::class, 'user'])->middleware('akses:manajemen_user,lihat');
-        Route::put('user/{id}/role', [AdminController::class, 'ubahRoleUser'])->middleware('akses:manajemen_user,ubah');
+        // FR-012: daftar akun + aktif/nonaktifkan akun (role tidak diubah lewat UI)
+        Route::get('user',             [AdminController::class, 'user'])->middleware('akses:manajemen_user,lihat');
+        Route::put('user/{id}/status', [AdminController::class, 'ubahStatusUser'])->middleware('akses:manajemen_user,ubah');
 
-        Route::get('role',                [AdminController::class, 'role'])->middleware('akses:role_hak_akses,lihat');
-        Route::get('role/{id}/hak-akses', [AdminController::class, 'hakAksesRole'])->middleware('akses:role_hak_akses,lihat');
-        Route::put('role/{id}/hak-akses', [AdminController::class, 'simpanHakAkses'])->middleware('akses:role_hak_akses,ubah');
-        Route::put('role/{id}/status',    [AdminController::class, 'ubahStatusRole'])->middleware('akses:role_hak_akses,ubah');
+        Route::get('laporan',     [AdminController::class, 'laporan'])->middleware('akses:laporan,lihat');
+        Route::get('laporan/pdf', [AdminController::class, 'laporanPdf'])->middleware('akses:laporan,lihat');
 
-
-        Route::get('laporan', [AdminController::class, 'laporan'])
-            ->middleware('akses:laporan,lihat');
-
-        Route::get('laporan/pdf', [AdminController::class, 'laporanPdf'])
-            ->middleware('akses:laporan,lihat');
-       
         Route::get('audit-log', [AdminController::class, 'auditLog'])->middleware('akses:audit_log,lihat');
-
-        // konfigurasi & notifikasi: menyusul setelah struktur tabelnya jelas
     });
 });
-
-

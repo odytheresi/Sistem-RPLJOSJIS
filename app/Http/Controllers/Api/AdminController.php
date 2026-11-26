@@ -48,84 +48,41 @@ class AdminController extends Controller
         return response()->json(User::with('role')->get());
     }
 
-    public function ubahRoleUser(Request $request, $id): JsonResponse
+    public function ubahStatusUser(Request $request, $id): JsonResponse
     {
-        $data = $request->validate(['id_role' => 'required|exists:role,id_role']);
+        $data   = $request->validate(['status' => 'required|in:aktif,nonaktif']);
+        $target = User::with('role')->findOrFail($id);
 
-        if ((int) $id === $request->user()->id_user) {
-            return response()->json(['message' => 'Tidak bisa mengubah role akun sendiri.'], 422);
+        if ($data['status'] === 'nonaktif') {
+            if ((int) $id === $request->user()->id_user) {
+                return response()->json(['message' => 'Tidak bisa menonaktifkan akun sendiri.'], 422);
+            }
+
+            // minimal harus ada 1 admin aktif
+            if ($target->role?->nma_role === 'admin') {
+                $adminAktif = User::where('status', 'aktif')
+                    ->whereHas('role', fn ($q) => $q->where('nma_role', 'admin'))->count();
+                if ($adminAktif <= 1) {
+                    return response()->json(['message' => 'Admin aktif terakhir tidak boleh dinonaktifkan.'], 422);
+                }
+            }
         }
 
         DB::table('user')->where('id_user', $id)->update([
-            'id_role'    => $data['id_role'],
+            'status'     => $data['status'],
             'updated_at' => now(),
         ]);
 
-        $this->catat($request, 'ubah_role_user', 'User', $id, 'id_role menjadi ' . $data['id_role']);
-
-        return response()->json(['message' => 'Role akun diperbarui.']);
-    }
-
-    // ---------- hak akses ----------
-    public function role(): JsonResponse
-    {
-        return response()->json(Role::all());
-    }
-
-    public function hakAksesRole($id): JsonResponse
-    {
-        $punya = HakAkses::where('id_role', $id)->get()->keyBy('nm_fitur');
-
-        return response()->json(
-            HakAkses::distinct()->pluck('nm_fitur')->map(fn ($f) => [
-                'nm_fitur' => $f,
-                'lihat'    => (bool) ($punya[$f]->lihat ?? false),
-                'tambah'   => (bool) ($punya[$f]->tambah ?? false),
-                'ubah'     => (bool) ($punya[$f]->ubah ?? false),
-                'hapus'    => (bool) ($punya[$f]->hapus ?? false),
-            ])->values()
-        );
-    }
-
-    public function simpanHakAkses(Request $request, $id): JsonResponse
-    {
-        $data = $request->validate([
-            'akses'            => 'required|array',
-            'akses.*.nm_fitur' => 'required|string',
-        ]);
-
-        foreach ($data['akses'] as $a) {
-            HakAkses::updateOrCreate(
-                ['id_role' => $id, 'nm_fitur' => $a['nm_fitur']],
-                [
-                    'lihat'  => (bool) ($a['lihat'] ?? false),
-                    'tambah' => (bool) ($a['tambah'] ?? false),
-                    'ubah'   => (bool) ($a['ubah'] ?? false),
-                    'hapus'  => (bool) ($a['hapus'] ?? false),
-                ]
-            );
+        // paksa logout akun yang dinonaktifkan (Sanctum)
+        if ($data['status'] === 'nonaktif') {
+            $target->tokens()->delete();
         }
 
-        $this->catat($request, 'ubah_hak_akses', 'Role', $id);
+        $this->catat($request, $data['status'] === 'aktif' ? 'aktifkan_user' : 'nonaktifkan_user', 'User', $id);
 
-        return response()->json(['message' => 'Hak akses disimpan.']);
+        return response()->json(['message' => 'Status akun diperbarui.']);
     }
 
-    public function ubahStatusRole(Request $request, $id): JsonResponse
-    {
-        $data = $request->validate(['status' => 'required|in:aktif,nonaktif']);
-
-        $role = Role::findOrFail($id);
-        if ($role->nma_role === 'admin' && $data['status'] === 'nonaktif') {
-            return response()->json(['message' => 'Role admin tidak boleh dinonaktifkan.'], 422);
-        }
-
-        DB::table('role')->where('id_role', $id)->update(['status' => $data['status']]);
-
-        $this->catat($request, 'ubah_status_role', 'Role', $id, 'Status menjadi ' . $data['status']);
-
-        return response()->json(['message' => 'Status role diperbarui.']);
-    }
 
     // ---------- Laporan ----------
     private function dataLaporan(Request $request): array

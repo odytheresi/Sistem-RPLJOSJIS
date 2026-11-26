@@ -68,9 +68,9 @@ class AuthController extends Controller
 
         // 3. Akun atau role nonaktif
         if ($user->status !== 'aktif' || $user->role?->status !== 'aktif') {
-            Audit_Log::catat('login_gagal', 'Akun atau role nonaktif', 'User', (string) $user->id_user, $user->id_user);
+            Audit_Log::catat('login_gagal', 'Akun nonaktif', 'User', (string) $user->id_user, $user->id_user);
 
-            return $this->gagal($request, 'Akun atau role nonaktif.', 403);
+            return $this->gagal($request, 'Akun Anda dinonaktifkan. Hubungi admin.', 403);
         }
 
         // 4. Berhasil
