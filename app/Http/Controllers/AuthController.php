@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use App\Models\Login;
 
 class AuthController extends Controller
@@ -15,8 +16,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'login' => 'required', 
-            'pass'  => 'required', 
+            'login' => 'required',
+            'pass'  => 'required',
         ]);
 
         // Cek apakah input berupa email atau nama
@@ -25,9 +26,10 @@ class AuthController extends Controller
         // Cari user di database
         $user = Login::where($fieldType, $request->login)->first();
 
-        // Cek apakah user ada dan password teks biasa-nya cocok
-        if ($user && $user->pass === $request->pass) {
-            
+        // Cek apakah user ada dan password cocok
+        // (mendukung password teks biasa lama DAN password ter-hash dari halaman kelola user)
+        if ($user && $this->passwordCocok($request->pass, $user->pass)) {
+
             // Cek status aktif
             if ($user->status !== 'aktif') {
                 return back()->withErrors(['login' => 'Akun Anda sudah nonaktif.'])->withInput();
@@ -61,5 +63,23 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/login');
+    }
+
+    /**
+     * Cocokkan password yang diketik dengan yang tersimpan.
+     * - Tersimpan ter-hash (bcrypt/argon, mis. dari LoginController::store) -> Hash::check
+     * - Tersimpan teks biasa (data lama, mis. "123456")                      -> perbandingan langsung
+     */
+    private function passwordCocok(string $input, ?string $tersimpan): bool
+    {
+        if ($tersimpan === null || $tersimpan === '') {
+            return false;
+        }
+
+        $sudahHash = password_get_info($tersimpan)['algo'] !== null;
+
+        return $sudahHash
+            ? Hash::check($input, $tersimpan)
+            : hash_equals($tersimpan, $input);
     }
 }

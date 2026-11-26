@@ -20,7 +20,8 @@ class OperatorController extends Controller
             return redirect('/login');
         }
 
-        $op = Operator::where('id_user', $userId)->first();
+        // Satu kali query saja, sekaligus memuat relasi login (untuk email)
+        $op = Operator::with('login')->where('id_user', $userId)->first();
 
         if (!$op) {
             return redirect('/login')->withErrors([
@@ -32,6 +33,8 @@ class OperatorController extends Controller
             'id_operator' => $op->id_operator,
             'nama'        => $op->nama_operator ?: 'Operator',
             'no_hp'       => $op->no_hp,
+            'email'       => $op->login->email ?? null,
+            'created_at'  => $op->created_at ? $op->created_at->toIso8601String() : null,
         ];
 
         // ===== Stasiun =====
@@ -83,6 +86,7 @@ class OperatorController extends Controller
                 'tarifs.id',
                 'tarifs.harga_per_kWh',
                 'tarifs.berlaku_mulai',
+                'charger.kd_charger',
                 'charging_station.nama_st'
             )
             ->orderBy('tarifs.id')
@@ -92,6 +96,7 @@ class OperatorController extends Controller
                 'harga_per_kWh' => $t->harga_per_kWh,
                 'berlaku_mulai' => $t->berlaku_mulai,
                 'charger'       => [
+                    'kd_charger'       => $t->kd_charger,
                     'charging_station' => ['nama_st' => $t->nama_st],
                 ],
             ])->values();
@@ -164,7 +169,7 @@ class OperatorController extends Controller
         }
 
         $chargingStations = ChargingStation::where('id_operator', $op->id_operator)
-            ->with(['chargers.konektor', 'chargers.tarifs'])
+            ->with(['chargers.konektor', 'chargers.tarifs', 'chargers.perbaikan'])
             ->orderBy('id_station')
             ->get();
 

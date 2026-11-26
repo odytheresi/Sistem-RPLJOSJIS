@@ -31,4 +31,9 @@ class Operator extends Model
             'id_operator'
         );
     }
+    
+    public function login()
+    {
+        return $this->belongsTo(Login::class, 'id_user', 'user_id');
+    }
 }

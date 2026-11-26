@@ -3,57 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tambah Charger</title>
+    <title>Tambah Charger - EVChargeHub</title>
     <style>
-        :root{--bg:#f4f6f9;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;--primary:#0f766e;--primary-dark:#0b5d57;--green-bg:#dcfce7;--green:#166534;--blue-bg:#dbeafe;--blue:#1d4ed8;--red-bg:#fee2e2;--red:#b91c1c}
-        *{box-sizing:border-box}
-        body{margin:0;font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);font-size:14px}
-        a{color:var(--primary);text-decoration:none}
-        .topbar{background:var(--primary);color:#fff;padding:14px 28px;display:flex;justify-content:space-between;align-items:center}
-        .topbar .brand{font-weight:700;font-size:16px}
-        .topbar nav a{color:#d1fae5;margin-left:18px;font-weight:500}
-        .topbar nav a.active,.topbar nav a:hover{color:#fff;text-decoration:underline}
-        .container{max-width:1100px;margin:24px auto;padding:0 20px}
-        .page-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
-        .page-head h1{margin:0;font-size:22px}
-        .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:18px}
-        .btn{display:inline-block;padding:8px 14px;border-radius:7px;border:1px solid transparent;font-size:13px;font-weight:600;cursor:pointer;background:var(--primary);color:#fff}
-        .btn:hover{background:var(--primary-dark)}
-        .btn-light{background:#fff;color:var(--text);border-color:var(--line)}
-        .btn-light:hover{background:#f3f4f6}
-        .alert{padding:11px 14px;border-radius:8px;margin-bottom:16px}
-        .alert-success{background:var(--green-bg);color:var(--green)}
-        .alert-error{background:var(--red-bg);color:var(--red)}
-        .alert ul{margin:6px 0 0 18px;padding:0}
-        .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
-        .badge-digunakan{background:var(--blue-bg);color:var(--blue)}
-        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-        .form-group{display:flex;flex-direction:column;gap:6px}
-        .form-group.full{grid-column:1/-1}
-        label{font-weight:600;font-size:13px}
-        input,select{padding:9px 11px;border:1px solid var(--line);border-radius:7px;font-size:14px;font-family:inherit;background:#fff}
-        input:focus,select:focus{outline:2px solid #99f6e4;border-color:var(--primary)}
-        .hint{color:var(--muted);font-size:12px}
-        .field-error{color:var(--red);font-size:12px}
-        .form-actions{margin-top:20px;display:flex;gap:10px}
-        .empty{text-align:center;color:var(--muted);padding:28px}
-        @media(max-width:640px){.form-grid{grid-template-columns:1fr}.topbar{flex-direction:column;gap:8px}}
-    </style>
+    :root { --green: #3d9e71; --green-dark: #2f7d59; --green-soft: #e0f1e8; --text: #172033; --muted: #8390a5; --line: #e7ecf3; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fb; color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+    a { color: var(--green); text-decoration: none; }
+
+    .sidebar { width: 240px; background: linear-gradient(180deg, #3d9e71, #2a7352); color: #fff; padding: 24px 16px; flex-shrink: 0; }
+    .sidebar h1 { font-size: 18px; margin-bottom: 4px; }
+    .sidebar .subtitle { font-size: 12px; color: #d4eee1; margin-bottom: 32px; }
+    .sidebar nav a { display: block; color: #e6f5ed; padding: 12px 14px; border-radius: 10px; margin-bottom: 10px; font-size: 14px;
+        background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); transition: background .2s, transform .2s; }
+    .sidebar nav a:hover { background: rgba(255,255,255,.2); color: #fff; transform: translateX(3px); }
+    .sidebar nav a.active { background: rgba(255,255,255,.28); border-color: rgba(255,255,255,.5); color: #fff; font-weight: 700; }
+
+    .main { flex: 1; padding: 28px 32px; overflow-x: auto; min-width: 0; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+    .topbar h2 { font-size: 22px; font-weight: 800; }
+    .topbar p { color: var(--muted); font-size: 12px; margin-top: 5px; }
+    .section-title { font-size: 16px; font-weight: 800; margin: 0; }
+    .section-subtitle { color: var(--muted); font-size: 12px; margin-top: 5px; }
+
+    .btn { display: inline-block; padding: 9px 16px; border-radius: 9px; border: 1px solid transparent; font-size: 12px; font-weight: 700;
+        font-family: inherit; cursor: pointer; background: var(--green); color: #fff; transition: .2s; }
+    .btn:hover { background: var(--green-dark); transform: translateY(-2px); color: #fff; }
+    .btn-light { background: #fff; color: var(--text); border-color: var(--line); }
+    .btn-light:hover { background: #f1f5f9; color: var(--text); }
+
+    .alert { padding: 12px 16px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; }
+    .alert-success { background: #dcfce7; color: #166534; }
+    .alert-error { background: #fee2e2; color: #b91c1c; }
+    .alert ul { margin: 6px 0 0 18px; }
+
+    .dashboard-panel { background: #fff; border: 1px solid var(--line); border-radius: 15px; overflow: hidden; margin-bottom: 22px; max-width: 820px; }
+    .panel-header { padding: 20px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #edf0f5; flex-wrap: wrap; }
+    .panel-body { padding: 20px 22px; }
+    .empty { text-align: center; color: #98a2b3; padding: 28px; font-size: 13px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-weight: 700; font-size: 12px; color: #475569; }
+    .form-control { padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; font-family: inherit;
+        background: #fff; color: var(--text); outline: none; transition: .2s; width: 100%; }
+    .form-control:focus { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
+    .form-control.is-invalid { border-color: #dc2626; }
+    .form-control:disabled { background: #f8fafc; color: #98a2b3; }
+    .field-error { color: #b91c1c; font-size: 11px; }
+    .hint { color: #98a2b3; font-size: 11px; }
+    .form-actions { display: flex; gap: 10px; margin-top: 8px; }
+    .form-section { border-top: 1px dashed var(--line); padding-top: 18px; margin-bottom: 20px; }
+    .form-section-title { font-size: 14px; font-weight: 800; margin-bottom: 6px; }
+
+    @media (max-width: 900px) { body { flex-direction: column; } .sidebar { width: 100%; } .main { padding: 22px 18px; } }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+</style>
 </head>
 <body>
-    <div class="topbar">
-        <div class="brand">⚡ Panel Operator</div>
+    <aside class="sidebar">
+        <h1>⚡ EVChargeHub</h1>
+        <div class="subtitle">Panel Operator</div>
         <nav>
-            <a href="{{ url('/operator/dashboard') }}">Dashboard</a>
-            <a href="{{ url('/operator/stasiun') }}">Stasiun</a>
-            <a href="{{ route('operator.charger.index') }}" class="active">Charger</a>
-            <a href="{{ url('/operator/tarif') }}">Tarif</a>
+            <a href="{{ url('/operator/dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url('/operator/lokasi_stasiun') }}">📍 Lokasi Stasiun</a>
+            <a href="{{ route('operator.charger.index') }}" class="active">🔌 Charger</a>
+            <a href="{{ url('/operator/keluhan') }}">📝 Keluhan</a>
+            <a href="{{ url('/operator/maintenance') }}">📈 Maintenance</a>
         </nav>
-    </div>
+    </aside>
 
-    <div class="container">
-        <div class="page-head">
-            <h1>Tambah Charger</h1>
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h2>Tambah Charger</h2>
+                <p>Daftarkan unit charger baru beserta tarif pengisiannya.</p>
+            </div>
             <a href="{{ route('operator.charger.index') }}" class="btn btn-light">← Kembali</a>
         </div>
 
@@ -70,23 +94,24 @@
             </div>
         @endif
 
-        <div class="card">
-            @if ($stations->isEmpty())
-                <div class="empty">Anda belum memiliki stasiun aktif. Aktifkan stasiun terlebih dahulu.</div>
-            @else
-                <form action="{{ route('operator.charger.store') }}" method="POST">
-                    @csrf
+        <section class="dashboard-panel">
+            <div class="panel-header">
+                <div>
+                    <h3 class="section-title">Form Charger Baru</h3>
+                    <div class="section-subtitle">Lengkapi data charger dan tarif di bawah ini.</div>
+                </div>
+            </div>
+            <div class="panel-body">
+                @if ($stations->isEmpty())
+                    <div class="empty">Anda belum memiliki stasiun aktif. Aktifkan stasiun terlebih dahulu.</div>
+                @else
                     @include('operator.charger.form', [
                         'action'      => route('operator.charger.store'),
                         'submitLabel' => 'Simpan',
                     ])
-                    <div class="form-actions">
-                        <button type="submit" class="btn">Simpan</button>
-                        <a href="{{ route('operator.charger.index') }}" class="btn btn-light">Batal</a>
-                    </div>
-                </form>
-            @endif
-        </div>
-    </div>
+                @endif
+            </div>
+        </section>
+    </main>
 </body>
 </html>

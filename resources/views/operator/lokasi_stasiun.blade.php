@@ -164,69 +164,12 @@
     .badge.red, .badge-error { background: #fee2e2; color: #b91c1c; }
     .badge.blue, .badge-digunakan { background: #dbeafe; color: #1d4ed8; }
 
-    /* ===== FILTER CARD (index charger) ===== */
-    .filter-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 14px;
-        margin-bottom: 22px;
-    }
-    .filter-card {
-        display: block;
-        background: white;
-        border: 1px solid var(--line);
-        border-radius: 15px;
-        padding: 18px;
-        box-shadow: 0 4px 16px #16274805;
-        color: var(--text);
-        transition: .2s;
-    }
-    .filter-card:hover { transform: translateY(-3px); border-color: #a6d8bf; color: var(--text); }
-    .filter-card.active { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
-    .filter-num { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
-    .filter-label { margin-top: 6px; font-size: 11px; color: #77849a; font-weight: 600; }
-
-    /* ===== FORM ===== */
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-    .form-grid .form-group { margin-bottom: 0; }
-    .form-grid { margin-bottom: 20px; }
-    .form-group label { font-weight: 700; font-size: 12px; color: #475569; }
-    .form-control {
-        padding: 11px 13px;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        font-size: 13px;
-        font-family: inherit;
-        background: #fff;
-        color: var(--text);
-        outline: none;
-        transition: .2s;
-        width: 100%;
-    }
-    .form-control:focus { border-color: var(--green); box-shadow: 0 0 0 3px #3d9e7122; }
-    .form-control.is-invalid { border-color: #dc2626; }
-    .field-error { color: #b91c1c; font-size: 11px; }
-    .form-actions { display: flex; gap: 10px; margin-top: 8px; }
-
-    /* ===== DETAIL LIST (show charger) ===== */
-    .detail { display: grid; grid-template-columns: 200px 1fr; row-gap: 14px; }
-    .detail dt { color: var(--muted); font-size: 12px; }
-    .detail dd { margin: 0; font-weight: 700; color: var(--text); }
-    .inline-status { display: flex; gap: 8px; align-items: center; }
-    .inline-status select { width: auto; }
-
     .dashboard-footer { text-align: center; color: #98a2b3; font-size: 11px; padding: 10px; }
 
     @media (max-width: 900px) {
         body { flex-direction: column; }
         .sidebar { width: 100%; }
         .main { padding: 22px 18px; }
-    }
-    @media (max-width: 640px) {
-        .form-grid { grid-template-columns: 1fr; }
-        .detail { grid-template-columns: 1fr; row-gap: 4px; }
-        .detail dd { margin-bottom: 10px; }
     }
 </style>
 <style>
@@ -280,6 +223,12 @@
     .st-item .st-addr { color: var(--muted); font-size: 11px; margin: 3px 0 8px; }
     .st-item .st-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
+    /* Stasiun yang sedang tidak bisa digunakan */
+    .st-item.down { background: #fafafa; border-style: dashed; }
+    .st-item.down .st-name { color: #64748b; }
+    .st-item.down:hover { border-color: #fca5a5; }
+    .st-warn { margin-top: 8px; font-size: 11px; font-weight: 700; color: #b91c1c; }
+
     .route-card {
         display: none; border: 1px solid var(--green); border-radius: 14px;
         padding: 14px; margin-bottom: 14px; background: #f6fcf9;
@@ -325,10 +274,42 @@
     }
     .ev-pin span { transform: rotate(45deg); font-size: 14px; }
     .ev-pin.sel { background: #dc2626; }
+    .ev-pin.down { background: #94a3b8; }
     .user-dot {
         background: #1a73e8; width: 18px; height: 18px; border-radius: 50%;
         border: 3px solid #fff; box-shadow: 0 0 0 4px rgba(26,115,232,.3), 0 2px 6px rgba(0,0,0,.5);
     }
+
+    /* ===== MODAL "TIDAK BISA DIGUNAKAN" ===== */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5);
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; visibility: hidden; transition: all .2s ease; z-index: 2000; padding: 16px;
+    }
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    .modal-box {
+        background: #fff; width: 100%; max-width: 480px; border-radius: 15px; padding: 22px;
+        border: 1px solid var(--line); box-shadow: 0 10px 25px rgba(0,0,0,.1);
+        transform: translateY(10px); transition: transform .2s ease; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-overlay.active .modal-box { transform: translateY(0); }
+    .modal-header {
+        display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+        margin-bottom: 14px; border-bottom: 1px solid #edf0f5; padding-bottom: 12px;
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 800; color: #b91c1c; line-height: 1.4; }
+    .modal-close {
+        background: #f1f5f9; border: 0; width: 28px; height: 28px; border-radius: 50%;
+        cursor: pointer; color: #64748b; font-size: 16px; flex-shrink: 0;
+    }
+    .ua-intro { font-size: 13px; color: #475569; margin-bottom: 12px; line-height: 1.6; }
+    .ua-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .ua-list li { border: 1px solid #f0f2f6; background: #f8fafc; border-radius: 12px; padding: 12px 14px; }
+    .ua-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .ua-head strong { font-size: 13px; }
+    .ua-detail { margin-top: 8px; font-size: 12px; color: #475569; line-height: 1.6; }
+    .ua-detail b { color: var(--text); }
+    .modal-footer { margin-top: 16px; display: flex; justify-content: flex-end; }
 
     @media (max-width: 900px) {
         .nav-layout { grid-template-columns: 1fr; }
@@ -342,16 +323,36 @@
     @php
         // Data stasiun untuk JavaScript (hanya yang punya koordinat)
         $stationsData = isset($chargingStations)
-            ? $chargingStations->filter(fn($s) => $s->latitude && $s->longitude)->map(fn($s) => [
-                'id'       => (string) $s->getKey(),
-                'nama'     => $s->nama_st,
-                'alamat'   => $s->alamat,
-                'lat'      => (float) $s->latitude,
-                'lng'      => (float) $s->longitude,
-                'status'   => $s->status ?? 'Aktif',
-                'total'    => $s->chargers->count(),
-                'tersedia' => $s->chargers->where('status', 'tersedia')->count(),
-            ])->values()
+            ? $chargingStations->filter(fn($s) => $s->latitude && $s->longitude)->map(function ($s) {
+
+                // Charger yang tidak tersedia + alasan (status & keterangan maintenance yang masih berjalan)
+                $masalah = $s->chargers->filter(fn($c) => $c->status !== 'tersedia')->map(function ($c) {
+                    $list  = $c->perbaikan;
+                    $list  = ($list instanceof \Illuminate\Support\Collection) ? $list : collect($list ? [$list] : []);
+                    $aktif = $list->whereIn('status', ['dijadwalkan', 'proses'])->sortByDesc('tgl_jadwal')->first();
+
+                    return [
+                        'kode'       => $c->kd_charger,
+                        'status'     => $c->status,
+                        'jenis'      => $aktif->jenis_maintenance ?? null,
+                        'keterangan' => $aktif->keterangan ?? null,
+                        'status_mt'  => $aktif->status ?? null,
+                        'tgl'        => ($aktif && $aktif->tgl_jadwal) ? \Carbon\Carbon::parse($aktif->tgl_jadwal)->format('d M Y') : null,
+                    ];
+                })->values();
+
+                return [
+                    'id'       => (string) $s->getKey(),
+                    'nama'     => $s->nama_st,
+                    'alamat'   => $s->alamat,
+                    'lat'      => (float) $s->latitude,
+                    'lng'      => (float) $s->longitude,
+                    'status'   => $s->status ?? 'Aktif',
+                    'total'    => $s->chargers->count(),
+                    'tersedia' => $s->chargers->where('status', 'tersedia')->count(),
+                    'masalah'  => $masalah,
+                ];
+            })->values()
             : collect();
     @endphp
 
@@ -362,7 +363,6 @@
             <a href="{{ url('/operator/dashboard') }}">📊 Dashboard</a>
             <a href="{{ url('/operator/lokasi_stasiun') }}" class="active">📍 Lokasi Stasiun</a>
             <a href="{{ route('operator.charger.index') }}">🔌 Charger</a>
-            <a href="{{ url('/operator/tarif') }}">💰 Tarif</a>
             <a href="{{ url('/operator/keluhan') }}">📝 Keluhan</a>
             <a href="{{ url('/operator/maintenance') }}">📈 Maintenance</a>
         </nav>
@@ -455,10 +455,17 @@
                                 <span class="panel-count">Total Unit: {{ $station->chargers->count() }} Charger</span>
 
                                 @if($station->latitude && $station->longitude)
-                                    <button type="button" class="btn btn-sm"
-                                            onclick="pilihStasiun('{{ $station->getKey() }}')">
-                                        🧭 Rute ke Sini
-                                    </button>
+                                    @if($station->chargers->where('status', 'tersedia')->count() > 0)
+                                        <button type="button" class="btn btn-sm"
+                                                onclick="pilihStasiun('{{ $station->getKey() }}')">
+                                            🧭 Rute ke Sini
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                                onclick="pilihStasiun('{{ $station->getKey() }}')">
+                                            ⛔ Tidak Tersedia
+                                        </button>
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -525,6 +532,20 @@
 
     </main>
 
+    <!-- ===== MODAL: STASIUN TIDAK BISA DIGUNAKAN ===== -->
+    <div class="modal-overlay" id="uaModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="uaTitle">Stasiun sedang tidak bisa digunakan</h3>
+                <button type="button" class="modal-close" onclick="tutupTidakTersedia()">×</button>
+            </div>
+            <div id="uaBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="tutupTidakTersedia()">Mengerti</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Leaflet JS untuk Peta -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -534,6 +555,7 @@
          *  - Stasiun terdekat   : Haversine + OSRM Table (jarak & waktu jalan)
          *  - Rute mobil + ETA   : OSRM Route (profil driving)
          *  - Ikuti rute         : snap ke rute, reroute otomatis, notifikasi belokan
+         *  - Stasiun tanpa charger tersedia tidak bisa dipilih (ditampilkan alasannya)
          * ===================================================== */
         const STATIONS = @json($stationsData);
         const OSRM = 'https://router.project-osrm.org';   // server demo; untuk produksi gunakan server OSRM/ORS sendiri
@@ -546,6 +568,9 @@
 
         const $ = id => document.getElementById(id);
         const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+        // Stasiun dianggap tidak bisa digunakan jika tidak ada satu pun charger yang tersedia
+        const isDown = s => s.tersedia === 0;
 
         /* ---------- Helper ---------- */
         function hav4(la1, ln1, la2, ln2) {
@@ -582,20 +607,24 @@
         }).addTo(map);
         map.on('dragstart', () => { if (navigating) follow = false; });
 
-        function pinIcon(sel) {
+        function pinIcon(sel, down) {
             return L.divIcon({
                 className: '',
-                html: '<div class="ev-pin' + (sel ? ' sel' : '') + '"><span>⚡</span></div>',
+                html: '<div class="ev-pin' + (down ? ' down' : '') + (sel ? ' sel' : '') + '"><span>⚡</span></div>',
                 iconSize: [30, 30], iconAnchor: [15, 30], popupAnchor: [0, -28]
             });
         }
 
         STATIONS.forEach(s => {
-            const m = L.marker([s.lat, s.lng], { icon: pinIcon(false) }).addTo(map);
+            const down = isDown(s);
+            const m = L.marker([s.lat, s.lng], { icon: pinIcon(false, down) }).addTo(map);
+            const tombol = down
+                ? '<small style="color:#b91c1c;font-weight:700">⛔ Sedang tidak bisa digunakan</small><br>' +
+                  '<button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="pilihStasiun(\'' + esc(s.id) + '\')">Lihat alasan</button>'
+                : '<button class="btn btn-sm" style="margin-top:6px" onclick="pilihStasiun(\'' + esc(s.id) + '\')">🧭 Rute ke sini</button>';
             m.bindPopup(
                 '<b>' + esc(s.nama) + '</b><br><small>' + esc(s.alamat) + '</small><br>' +
-                '<small>' + s.tersedia + ' dari ' + s.total + ' charger tersedia</small><br>' +
-                '<button class="btn btn-sm" style="margin-top:6px" onclick="pilihStasiun(\'' + esc(s.id) + '\')">🧭 Rute ke sini</button>'
+                '<small>' + s.tersedia + ' dari ' + s.total + ' charger tersedia</small><br>' + tombol
             );
             stationMarkers[s.id] = m;
         });
@@ -690,30 +719,89 @@
         function drawNearest(list) {
             if (!list.length) { $('nearestList').innerHTML = '<p class="empty-text">Belum ada stasiun dengan koordinat.</p>'; return; }
             $('nearestList').innerHTML = list.map((s, i) => {
+                const down = isDown(s);
                 const jarak = s.jalan != null ? fmtDist(s.jalan) : '~' + fmtDist(s.jarak) + ' (lurus)';
                 const eta = s.durasi != null ? ' · 🚗 ' + fmtDur(s.durasi) : '';
                 const badge = s.tersedia > 0 ? 'green' : 'red';
-                return '<div class="st-item' + (selected && selected.id === s.id ? ' selected' : '') + '" onclick="pilihStasiun(\'' + esc(s.id) + '\')">' +
+                return '<div class="st-item' + (down ? ' down' : '') + (selected && selected.id === s.id ? ' selected' : '') + '" onclick="pilihStasiun(\'' + esc(s.id) + '\')">' +
                     '<div class="st-name">' + (i + 1) + '. ' + esc(s.nama) + '</div>' +
                     '<div class="st-addr">' + esc(s.alamat) + '</div>' +
                     '<div class="st-meta"><span class="panel-count">' + jarak + eta + '</span>' +
-                    '<span class="badge ' + badge + '">' + s.tersedia + '/' + s.total + ' tersedia</span></div></div>';
+                    '<span class="badge ' + badge + '">' + s.tersedia + '/' + s.total + ' tersedia</span></div>' +
+                    (down ? '<div class="st-warn">⛔ Sedang tidak bisa digunakan · klik untuk melihat alasan</div>' : '') +
+                    '</div>';
             }).join('');
         }
+
+        /* ---------- Stasiun tidak tersedia: tampilkan alasan ---------- */
+        const STATUS_LABEL = { perbaikan: 'Sedang maintenance', error: 'Mengalami error', digunakan: 'Sedang digunakan' };
+        const STATUS_BADGE = { perbaikan: 'orange', error: 'red', digunakan: 'blue' };
+        const STATUS_TEXT  = {
+            perbaikan: 'Charger sedang dalam perawatan.',
+            error: 'Charger mengalami gangguan dan menunggu penanganan.',
+            digunakan: 'Charger sedang dipakai pengemudi lain.'
+        };
+        const MT_LABEL = { dijadwalkan: 'Dijadwalkan', proses: 'Dalam proses' };
+
+        function alasanCharger(m) {
+            const label = STATUS_LABEL[m.status] || (m.status ? m.status.charAt(0).toUpperCase() + m.status.slice(1) : 'Tidak tersedia');
+            const warna = STATUS_BADGE[m.status] || '';
+            let detail = STATUS_TEXT[m.status] || 'Charger tidak tersedia saat ini.';
+
+            // Keterangan dari data maintenance yang masih berjalan
+            if (m.jenis || m.keterangan) {
+                detail += '<br><b>Maintenance:</b> ' +
+                    (m.jenis ? esc(m.jenis) : '') +
+                    (m.status_mt ? ' · ' + esc(MT_LABEL[m.status_mt] || m.status_mt) : '') +
+                    (m.tgl ? ' · jadwal ' + esc(m.tgl) : '') +
+                    (m.keterangan ? '<br>' + esc(m.keterangan) : '');
+            } else if (m.status === 'perbaikan') {
+                detail += '<br><i>Belum ada catatan maintenance.</i>';
+            }
+
+            return '<li><div class="ua-head"><strong>' + esc(m.kode) + '</strong>' +
+                   '<span class="badge ' + warna + '">' + esc(label) + '</span></div>' +
+                   '<div class="ua-detail">' + detail + '</div></li>';
+        }
+
+        function tampilkanTidakTersedia(s) {
+            $('uaTitle').textContent = '⛔ ' + s.nama + ' sedang tidak bisa digunakan';
+
+            let html;
+            if (s.total === 0) {
+                html = '<p class="ua-intro">Belum ada charger yang terdaftar di stasiun ini, sehingga rute tidak dapat dipilih.</p>';
+            } else {
+                html = '<p class="ua-intro">Rute tidak dapat dipilih karena tidak ada charger yang tersedia (0 dari ' + s.total +
+                       ' charger). Penyebabnya:</p><ul class="ua-list">' + s.masalah.map(alasanCharger).join('') + '</ul>';
+            }
+            $('uaBody').innerHTML = html;
+            $('uaModal').classList.add('active');
+        }
+
+        function tutupTidakTersedia() { $('uaModal').classList.remove('active'); }
+        $('uaModal').addEventListener('click', e => { if (e.target.id === 'uaModal') tutupTidakTersedia(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') tutupTidakTersedia(); });
 
         /* ---------- Pilih stasiun & ambil rute ---------- */
         function pilihStasiun(id) {
             const s = STATIONS.find(x => x.id === String(id));
             if (!s) return;
-            $('navPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
             map.closePopup();
+
+            // Stasiun tanpa charger tersedia: jangan buat rute, tampilkan alasannya
+            if (isDown(s)) {
+                tampilkanTidakTersedia(s);
+                return;
+            }
+
+            $('navPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
             if (!userPos) {            // belum ada lokasi: minta dulu, rute otomatis diambil setelah lokasi ketemu
                 pendingId = s.id;
                 startTracking();
                 return;
             }
-            Object.keys(stationMarkers).forEach(k => stationMarkers[k].setIcon(pinIcon(k === s.id)));
+            STATIONS.forEach(x => stationMarkers[x.id].setIcon(pinIcon(x.id === s.id, isDown(x))));
             selected = s;
             if (navigating) stopNavigation(true);
             fetchRoute(userPos, s, false);
@@ -895,7 +983,7 @@
             selected = null; route = null;
             if (routeCasing) { map.removeLayer(routeCasing); routeCasing = null; }
             if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
-            Object.keys(stationMarkers).forEach(k => stationMarkers[k].setIcon(pinIcon(false)));
+            STATIONS.forEach(x => stationMarkers[x.id].setIcon(pinIcon(false, isDown(x))));
             $('routeCard').classList.remove('show');
             setStatus(userPos ? 'Rute dibatalkan. Pilih stasiun lain.' : 'Klik "Lokasi Saya" untuk mencari stasiun terdekat.');
             if (userPos) renderNearest();

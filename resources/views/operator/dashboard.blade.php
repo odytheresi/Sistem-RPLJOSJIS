@@ -156,6 +156,7 @@
     td { padding: 13px 18px; border-bottom: 1px solid #f0f2f6; color: #475569; }
     td strong { color: var(--text); }
     td .sub { display: block; color: #98a2b3; font-size: 10px; margin-top: 2px; }
+    td .muted { color: #98a2b3; font-size: 11px; }
     td.wrap { white-space: normal; min-width: 220px; max-width: 360px; }
     tbody tr { cursor: pointer; transition: background .15s; }
     tbody tr:last-child td { border-bottom: 0; }
@@ -188,7 +189,7 @@
     .modal-body { display: grid; grid-template-columns: 130px 1fr; row-gap: 11px; font-size: 13px; }
     .modal-body dt { color: var(--muted); font-size: 12px; }
     .modal-body dd { margin: 0; font-weight: 600; color: var(--text); word-break: break-word; }
-    .modal-footer { margin-top: 18px; display: flex; justify-content: flex-end; gap: 8px; }
+    .modal-footer { margin-top: 18px; display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
 
     @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 900px) { body { flex-direction: column; } .sidebar { width: 100%; } .main { padding: 22px 18px; } }
@@ -205,7 +206,6 @@
             <a href="/operator/dashboard" class="active">📊 Dashboard</a>
             <a href="/operator/lokasi_stasiun">📍 Lokasi Stasiun</a>
             <a href="/operator/charger">🔌 Charger</a>
-            <a href="/operator/tarif">💰 Tarif</a>
             <a href="/operator/keluhan">📝 Keluhan</a>
             <a href="/operator/maintenance">📈 Maintenance</a>
         </nav>
@@ -299,6 +299,7 @@
             </div>
             <dl class="modal-body" id="modalContent"></dl>
             <div class="modal-footer">
+                <a class="btn" id="modalLink2" href="#" style="display:none">Kelola tarif →</a>
                 <a class="btn" id="modalLink" href="#">Kelola data →</a>
                 <button type="button" class="btn" style="background:#64748b" onclick="closeModal()">Tutup</button>
             </div>
@@ -342,7 +343,7 @@
         $('pAvatar').textContent = inisial;
         $('pNama').textContent = namaOperator;
         $('pId').textContent = '#' + operator.id_operator;
-        $('pEmail').textContent = operator.email || '-';
+        $('pEmail').textContent = operator.email || (operator.login && operator.login.email) || '-';
         $('pHp').textContent = operator.no_hp || '-';
         $('pSejak').textContent = operator.terdaftar || (operator.created_at ? new Date(operator.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-');
         $('pStasiun').textContent = totalStationCount + ' lokasi';
@@ -370,6 +371,25 @@
             const n = c.charging_station ? c.charging_station.nama_st : null;
             if (n) chargerPerStasiun[n] = (chargerPerStasiun[n] || 0) + 1;
         });
+
+        // ===== TARIF PER CHARGER (digabung ke tab Charger) =====
+        const hargaOf = t => t.harga_per_kWh ?? t.harga_per_kwh;
+
+        // semua tarif milik satu charger, diurutkan dari yang terbaru
+        function tarifsOf(c) {
+            return tarifs
+                .filter(t => (t.charger && t.charger.kd_charger === c.kd_charger) ||
+                             (t.id_charger != null && c.id_charger != null && t.id_charger === c.id_charger))
+                .sort((a, b) => new Date(b.berlaku_mulai) - new Date(a.berlaku_mulai));
+        }
+
+        // tarif yang sedang berlaku = tarif terbaru yang tanggalnya sudah tiba
+        function tarifAktif(c) {
+            const now = new Date();
+            return tarifsOf(c).find(t => new Date(t.berlaku_mulai) <= now) || null;
+        }
+
+        const chargerTanpaTarif = chargers.filter(c => !tarifAktif(c)).length;
 
         // ===== STATISTIK =====
         $('stats-grid').innerHTML = `
@@ -419,6 +439,7 @@
             if (keluhanBaru > 0) a.push(['red', '📝 ' + keluhanBaru + ' keluhan menunggu ditindaklanjuti', 'keluhan']);
             if (chargerNonaktifCount > 0) a.push(['red', '⛔ ' + chargerNonaktifCount + ' charger non-aktif', 'charger']);
             if (chargerMaintenanceCount > 0) a.push(['orange', '🛠️ ' + chargerMaintenanceCount + ' charger dalam perawatan', 'charger']);
+            if (chargerTanpaTarif > 0) a.push(['orange', '💰 ' + chargerTanpaTarif + ' charger belum memiliki tarif', 'charger']);
             $('alerts').innerHTML = a.length
                 ? a.map(x => '<span class="alert-chip ' + x[0] + '" onclick="setTab(\'' + x[2] + '\')">' + x[1] + '</span>').join('')
                 : '<span class="alert-chip green">✅ Semua operasional normal, tidak ada yang perlu ditindaklanjuti.</span>';
@@ -426,6 +447,9 @@
 
         // ===== KONFIGURASI TAB =====
         const stationOf = c => c.charging_station ? c.charging_station.nama_st : '-';
+        const konektorOf = c => c.tipe_konektor ? c.tipe_konektor.nm_konektor : '-';
+        const hargaAktifText = c => { const t = tarifAktif(c); return t ? rupiah(hargaOf(t)) + ' / kWh' : 'Belum ada tarif'; };
+
         const TABS = {
             stasiun: {
                 label: 'Stasiun', title: 'Charging Station', link: '/operator/lokasi_stasiun', data: chargingStations,
@@ -436,24 +460,35 @@
                 detail: cs => ({ 'ID': cs.id, 'Nama Stasiun': cs.nama_st, 'Alamat': cs.alamat, 'Jumlah Charger': (chargerPerStasiun[cs.nama_st] || 0) + ' unit', 'Status': cs.status })
             },
             charger: {
-                label: 'Charger', title: 'Unit Charger', link: '/operator/charger', data: chargers,
-                head: ['Kode', 'Stasiun', 'Konektor', 'Daya', 'Status'],
-                cells: c => ['<strong>' + esc(c.kd_charger) + '</strong>', esc(stationOf(c)),
-                             esc(c.tipe_konektor ? c.tipe_konektor.nm_konektor : '-'), esc(c.daya_maks ?? c.daya) + ' kW', badge(c.status ?? 'Tersedia')],
-                search: c => [c.kd_charger, stationOf(c), c.tipe_konektor ? c.tipe_konektor.nm_konektor : '', c.status].join(' '),
-                detail: c => ({ 'Kode Charger': c.kd_charger, 'Stasiun': stationOf(c), 'Konektor': c.tipe_konektor ? c.tipe_konektor.nm_konektor : '-',
-                                'Daya Maks': (c.daya_maks ?? c.daya) + ' kW', 'Status': c.status ?? 'Tersedia' })
-            },
-            tarif: {
-                label: 'Tarif', title: 'Tarif', link: '/operator/tarif', data: tarifs,
-                head: ['Stasiun', 'Charger', 'Harga / kWh', 'Berlaku Mulai'],
-                cells: t => [esc(t.charger && t.charger.charging_station ? t.charger.charging_station.nama_st : '-'),
-                             esc(t.charger ? t.charger.kd_charger : '-'),
-                             '<strong>' + rupiah(t.harga_per_kWh ?? t.harga_per_kwh) + '</strong>', esc(fmtDate(t.berlaku_mulai))],
-                search: t => [t.charger && t.charger.charging_station ? t.charger.charging_station.nama_st : '', t.charger ? t.charger.kd_charger : '', t.harga_per_kWh ?? t.harga_per_kwh].join(' '),
-                detail: t => ({ 'ID Tarif': t.id, 'Stasiun': t.charger && t.charger.charging_station ? t.charger.charging_station.nama_st : '-',
-                                'Charger': t.charger ? t.charger.kd_charger : '-', 'Harga / kWh': rupiah(t.harga_per_kWh ?? t.harga_per_kwh),
-                                'Berlaku Mulai': fmtDate(t.berlaku_mulai) })
+                label: 'Charger & Tarif', title: 'Unit Charger & Tarif', link: '/operator/charger', link2: '/operator/tarif', data: chargers,
+                head: ['Kode', 'Stasiun', 'Konektor', 'Daya', 'Tarif Berlaku', 'Status'],
+                cells: c => {
+                    const t = tarifAktif(c);
+                    return ['<strong>' + esc(c.kd_charger) + '</strong>',
+                            esc(stationOf(c)),
+                            esc(konektorOf(c)),
+                            esc(c.daya_maks ?? c.daya) + ' kW',
+                            t ? '<strong>' + rupiah(hargaOf(t)) + '</strong><span class="sub">per kWh · sejak ' + esc(fmtDate(t.berlaku_mulai)) + '</span>'
+                              : '<span class="muted">Belum ada tarif</span>',
+                            badge(c.status ?? 'Tersedia')];
+                },
+                search: c => { const t = tarifAktif(c); return [c.kd_charger, stationOf(c), konektorOf(c), c.status, t ? hargaOf(t) : ''].join(' '); },
+                detail: c => {
+                    const t = tarifAktif(c);
+                    const riwayat = tarifsOf(c);
+                    return {
+                        'Kode Charger': c.kd_charger,
+                        'Stasiun': stationOf(c),
+                        'Konektor': konektorOf(c),
+                        'Daya Maks': (c.daya_maks ?? c.daya) + ' kW',
+                        'Status': c.status ?? 'Tersedia',
+                        'Tarif Berlaku': t ? rupiah(hargaOf(t)) + ' / kWh' : 'Belum ada tarif',
+                        'Berlaku Mulai': t ? fmtDate(t.berlaku_mulai) : '-',
+                        'Riwayat Tarif': riwayat.length
+                            ? riwayat.map(x => rupiah(hargaOf(x)) + ' (' + fmtDate(x.berlaku_mulai) + ')').join('; ')
+                            : '-'
+                    };
+                }
             },
             keluhan: {
                 label: 'Keluhan', title: 'Keluhan Pengguna', link: '/operator/keluhan', data: keluhan,
@@ -511,6 +546,8 @@
         function openModal(tab, d) {
             $('modalTitle').textContent = tab.title;
             $('modalLink').href = tab.link;
+            const l2 = $('modalLink2');
+            if (tab.link2) { l2.href = tab.link2; l2.style.display = ''; } else { l2.style.display = 'none'; }
             $('modalContent').innerHTML = Object.entries(tab.detail(d))
                 .map(([k, v]) => '<dt>' + esc(k) + '</dt><dd>' + esc(v) + '</dd>').join('');
             $('detailModal').classList.add('active');

@@ -111,7 +111,6 @@
             <a href="{{ url('/operator/dashboard') }}">📊 Dashboard</a>
             <a href="{{ url('/operator/lokasi_stasiun') }}">📍 Lokasi Stasiun</a>
             <a href="{{ route('operator.charger.index') }}">🔌 Charger</a>
-            <a href="{{ route('operator.tarif.index') }}">💰 Tarif</a>
             <a href="{{ route('operator.keluhan.index') }}">📝 Keluhan</a>
             <a href="{{ route('operator.perbaikan.index') }}" class="active">📈 Maintenance</a>
         </nav>

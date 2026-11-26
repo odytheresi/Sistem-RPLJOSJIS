@@ -236,7 +236,6 @@
             <a href="{{ url('/operator/dashboard') }}">📊 Dashboard</a>
             <a href="{{ url('/operator/lokasi_stasiun') }}">📍 Lokasi Stasiun</a>
             <a href="{{ route('operator.charger.index') }}" class="active">🔌 Charger</a>
-            <a href="{{ url('/operator/tarif') }}">💰 Tarif</a>
             <a href="{{ url('/operator/keluhan') }}">📝 Keluhan</a>
             <a href="{{ url('/operator/maintenance') }}">📈 Maintenance</a>
         </nav>

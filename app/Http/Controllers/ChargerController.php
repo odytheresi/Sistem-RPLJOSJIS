@@ -5,15 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Charger;
 use App\Models\ChargingStation;
 use App\Models\Operator;
+use App\Models\Tarif;
 use App\Models\TipeKonektor;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ChargerController extends Controller
 {
     /** Status yang boleh diatur manual oleh operator. 'digunakan' diatur sistem. */
     private const STATUS_MANUAL = ['tersedia', 'perbaikan', 'error'];
+
+    /** Kolom milik tabel charger (sisanya adalah data tarif). */
+    private const KOLOM_CHARGER = ['id_station', 'id_konektor', 'kd_charger', 'daya_maks', 'status'];
 
     private function currentOperator(): Operator
     {
@@ -63,6 +69,10 @@ class ChargerController extends Controller
                 Rule::unique('charger', 'kd_charger')->ignore($charger?->id_charger, 'id_charger'),
             ],
             'daya_maks'   => ['required', 'numeric', 'min:0.1', 'max:9999'],
+
+            // Tarif (logika sama seperti create tarif)
+            'harga_per_kWh' => ['required', 'numeric', 'min:0'],
+            'berlaku_mulai' => ['required', 'date'],
         ];
 
         // Charger yang sedang dipakai tidak boleh diubah statusnya manual.
@@ -86,6 +96,12 @@ class ChargerController extends Controller
             'daya_maks.numeric'  => 'Daya maksimum harus berupa angka.',
             'daya_maks.min'      => 'Daya maksimum minimal 0,1 kW.',
             'status.in'          => 'Status tidak valid.',
+
+            'harga_per_kWh.required' => 'Harga per kWh wajib diisi.',
+            'harga_per_kWh.numeric'  => 'Harga per kWh harus berupa angka.',
+            'harga_per_kWh.min'      => 'Harga per kWh tidak boleh negatif.',
+            'berlaku_mulai.required' => 'Tanggal berlaku wajib diisi.',
+            'berlaku_mulai.date'     => 'Tanggal berlaku tidak valid.',
         ];
     }
 
@@ -136,10 +152,20 @@ class ChargerController extends Controller
 
         $data = $request->validate($this->rules($activeIds), $this->messages());
 
-        (new Charger())->forceFill($data)->save();
+        DB::transaction(function () use ($data) {
+            $charger = new Charger();
+            $charger->forceFill(Arr::only($data, self::KOLOM_CHARGER))->save();
+
+            // Tarif awal untuk charger baru
+            (new Tarif())->forceFill([
+                'id_charger'    => $charger->id_charger,
+                'harga_per_kWh' => $data['harga_per_kWh'],
+                'berlaku_mulai' => $data['berlaku_mulai'],
+            ])->save();
+        });
 
         return redirect()->route('operator.charger.index')
-            ->with('success', 'Charger berhasil ditambahkan.');
+            ->with('success', 'Charger dan tarif berhasil ditambahkan.');
     }
 
     public function show($id)
@@ -178,10 +204,35 @@ class ChargerController extends Controller
 
         $data = $request->validate($this->rules($allowedIds, $charger), $this->messages());
 
-        $charger->forceFill($data)->save();
+        DB::transaction(function () use ($charger, $data) {
+            $charger->forceFill(Arr::only($data, self::KOLOM_CHARGER))->save();
+
+            // Tanggal sama dengan entri yang ada -> perbarui entri itu.
+            // Tanggal berbeda -> tambah riwayat baru (riwayat lama tetap tersimpan).
+            $tarif = $charger->tarifs()
+                ->whereDate('berlaku_mulai', $data['berlaku_mulai'])
+                ->first();
+
+            if ($tarif) {
+                if ((float) $tarif->harga_per_kWh !== (float) $data['harga_per_kWh']) {
+                    $tarif->forceFill(['harga_per_kWh' => $data['harga_per_kWh']])->save();
+                }
+                return;
+            }
+
+            // Hindari entri duplikat bila harga sama dengan tarif terbaru
+            $terbaru = $charger->tarifs()->orderByDesc('berlaku_mulai')->first();
+            if (!$terbaru || (float) $terbaru->harga_per_kWh !== (float) $data['harga_per_kWh']) {
+                (new Tarif())->forceFill([
+                    'id_charger'    => $charger->id_charger,
+                    'harga_per_kWh' => $data['harga_per_kWh'],
+                    'berlaku_mulai' => $data['berlaku_mulai'],
+                ])->save();
+            }
+        });
 
         return redirect()->route('operator.charger.show', $charger->id_charger)
-            ->with('success', 'Charger berhasil diperbarui.');
+            ->with('success', 'Charger dan tarif berhasil diperbarui.');
     }
 
     public function updateStatus(Request $request, $id)
