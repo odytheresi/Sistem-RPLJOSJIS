@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-class AuthController extends Controller
+class AdminAuthController extends Controller
 {
     public function login(Request $request): JsonResponse
     {
@@ -57,8 +57,8 @@ class AuthController extends Controller
 
         // 3. Akun/role nonaktif atau bukan admin
         if ($user->status !== 'aktif' || $user->role?->status !== 'aktif') {
-            Audit_Log::catat('login_gagal', 'Akun atau role nonaktif', 'User', (string) $user->id_user, $user->id_user);
-            return response()->json(['message' => 'Akun atau role nonaktif.'], 403);
+            Audit_Log::catat('login_gagal', 'Akun nonaktif', 'User', (string) $user->id_user, $user->id_user);
+            return response()->json(['message' => 'Akun Anda dinonaktifkan. Hubungi admin.'], 403);
         }
 
         if (! $user->admin) {

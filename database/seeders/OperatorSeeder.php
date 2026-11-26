@@ -9,12 +9,24 @@ class OperatorSeeder extends Seeder
 {
     public function run(): void
     {
-        $idUser = DB::table('user')->where('identifier', 'OP001')->value('id_user');
+        // identifier => [nama, no_hp]
+        $operators = [
+            'OP001' => ['Amanjiwo',       '081234567890'],
+            'OP002' => ['Hendra Saputra', '081234567891'],
+            'OP003' => ['Maya Lestari',   '081234567892'],
+            'OP004' => ['Fajar Nugroho',  '081234567893'],
+        ];
 
-        DB::table('operator')->updateOrInsert(
-            ['id_user' => $idUser],
-            ['nama_operator' => 'Amanjiwo', 'no_hp' => '081234567890',
-             'created_at' => now(), 'updated_at' => now()]
-        );
+        $idUser = DB::table('user')
+            ->whereIn('identifier', array_keys($operators))
+            ->pluck('id_user', 'identifier');
+
+        foreach ($operators as $identifier => [$nama, $hp]) {
+            DB::table('operator')->updateOrInsert(
+                ['id_user' => $idUser[$identifier]],
+                ['nama_operator' => $nama, 'no_hp' => $hp,
+                 'created_at' => now(), 'updated_at' => now()]
+            );
+        }
     }
 }

@@ -283,7 +283,7 @@
                     <dt>Stasiun</dt><dd>{{ $charger->station->nama_st ?? '-' }}</dd>
                     <dt>Alamat Stasiun</dt><dd>{{ $charger->station->alamat ?? '-' }}</dd>
                     <dt>Tipe Konektor</dt>
-                    <dd>{{ $charger->konektor->nm_konektor ?? '-' }}
+                    <dd>{{ $charger->konektor->nama_konektor ?? '-' }}
                         @if ($charger->konektor?->jenis_charging) ({{ $charger->konektor->jenis_charging }}) @endif
                     </dd>
                     <dt>Daya Maksimum</dt><dd>{{ rtrim(rtrim(number_format($charger->daya_maks, 1, ',', '.'), '0'), ',') }} kW</dd>

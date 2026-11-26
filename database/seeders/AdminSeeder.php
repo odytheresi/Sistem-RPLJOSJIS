@@ -13,6 +13,8 @@ class AdminSeeder extends Seeder
         $admins = [
             'AN001' => 'Budi Yono',
             'AN002' => 'Siti Rahma',
+            'AN003' => 'Andi Pratama',
+            'AN004' => 'Rina Wulandari',
         ];
 
         $idUser = DB::table('user')

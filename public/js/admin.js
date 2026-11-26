@@ -88,9 +88,10 @@ async function muatAkses() {
 
 // ---------- menu sidebar ----------
 const MENU = [
-    { fitur: 'dashboard',      label: 'Dashboard',        icon: 'bi-speedometer2', href: '/admin/dashboard' },
-    { fitur: 'laporan',            label: 'Laporan',            icon: 'bi-file-earmark-text', href: '/admin/laporan' },
-    { fitur: 'audit_log',      label: 'Audit log',        icon: 'bi-journal-text', href: '/admin/audit-log' },
+    { fitur: 'dashboard',      label: 'Dashboard',      icon: 'bi-speedometer2',      href: '/admin/dashboard' },
+    { fitur: 'manajemen_user', label: 'Manajemen User', icon: 'bi-people',            href: '/admin/user' },
+    { fitur: 'laporan',        label: 'Laporan',        icon: 'bi-file-earmark-text', href: '/admin/laporan' },
+    { fitur: 'audit_log',      label: 'Audit log',      icon: 'bi-journal-text',      href: '/admin/audit-log' },
 ];
 
 // dipanggil tiap halaman: boot(async () => { ...isi halaman... })

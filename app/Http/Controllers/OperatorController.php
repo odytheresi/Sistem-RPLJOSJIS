@@ -32,9 +32,8 @@ class OperatorController extends Controller
             'no_hp'       => $op->no_hp,
         ];
 
-        // ===== Stasiun =====
+        // ===== Stasiun (semua operator berbagi data) =====
         $stationRows = DB::table('charging_station')
-            ->where('id_operator', $op->id_operator)
             ->orderBy('id_station')
             ->get();
 
@@ -147,10 +146,9 @@ class OperatorController extends Controller
 
     public function lokasiStasiun(): View
     {
-        $op = $this->operatorLogin();
+        $this->operatorLogin();
 
-        $chargingStations = ChargingStation::where('id_operator', $op->id_operator)
-            ->with(['chargers.konektor', 'chargers.tarifs'])
+        $chargingStations = ChargingStation::with(['chargers.konektor', 'chargers.tarifs'])
             ->orderBy('id_station')
             ->get();
 

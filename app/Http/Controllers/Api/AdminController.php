@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Audit_Log;
 use App\Models\HakAkses;
-// use App\Models\Notifikasi;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema; 
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminController extends Controller
@@ -47,101 +48,115 @@ class AdminController extends Controller
         return response()->json(User::with('role')->get());
     }
 
-    public function ubahRoleUser(Request $request, $id): JsonResponse
+    public function ubahStatusUser(Request $request, $id): JsonResponse
     {
-        $data = $request->validate(['id_role' => 'required|exists:role,id_role']);
+        $data   = $request->validate(['status' => 'required|in:aktif,nonaktif']);
+        $target = User::with('role')->findOrFail($id);
 
-        if ((int) $id === $request->user()->id_user) {
-            return response()->json(['message' => 'Tidak bisa mengubah role akun sendiri.'], 422);
+        if ($data['status'] === 'nonaktif') {
+            if ((int) $id === $request->user()->id_user) {
+                return response()->json(['message' => 'Tidak bisa menonaktifkan akun sendiri.'], 422);
+            }
+
+            // minimal harus ada 1 admin aktif
+            if ($target->role?->nma_role === 'admin') {
+                $adminAktif = User::where('status', 'aktif')
+                    ->whereHas('role', fn ($q) => $q->where('nma_role', 'admin'))->count();
+                if ($adminAktif <= 1) {
+                    return response()->json(['message' => 'Admin aktif terakhir tidak boleh dinonaktifkan.'], 422);
+                }
+            }
         }
 
         DB::table('user')->where('id_user', $id)->update([
-            'id_role'    => $data['id_role'],
+            'status'     => $data['status'],
             'updated_at' => now(),
         ]);
 
-        $this->catat($request, 'ubah_role_user', 'User', $id, 'id_role menjadi ' . $data['id_role']);
-
-        return response()->json(['message' => 'Role akun diperbarui.']);
-    }
-
-    // ---------- hak akses ----------
-    public function role(): JsonResponse
-    {
-        return response()->json(Role::all());
-    }
-
-    public function hakAksesRole($id): JsonResponse
-    {
-        $punya = HakAkses::where('id_role', $id)->get()->keyBy('nm_fitur');
-
-        return response()->json(
-            HakAkses::distinct()->pluck('nm_fitur')->map(fn ($f) => [
-                'nm_fitur' => $f,
-                'lihat'    => (bool) ($punya[$f]->lihat ?? false),
-                'tambah'   => (bool) ($punya[$f]->tambah ?? false),
-                'ubah'     => (bool) ($punya[$f]->ubah ?? false),
-                'hapus'    => (bool) ($punya[$f]->hapus ?? false),
-            ])->values()
-        );
-    }
-
-    public function simpanHakAkses(Request $request, $id): JsonResponse
-    {
-        $data = $request->validate([
-            'akses'            => 'required|array',
-            'akses.*.nm_fitur' => 'required|string',
-        ]);
-
-        foreach ($data['akses'] as $a) {
-            HakAkses::updateOrCreate(
-                ['id_role' => $id, 'nm_fitur' => $a['nm_fitur']],
-                [
-                    'lihat'  => (bool) ($a['lihat'] ?? false),
-                    'tambah' => (bool) ($a['tambah'] ?? false),
-                    'ubah'   => (bool) ($a['ubah'] ?? false),
-                    'hapus'  => (bool) ($a['hapus'] ?? false),
-                ]
-            );
+        // paksa logout akun yang dinonaktifkan (Sanctum)
+        if ($data['status'] === 'nonaktif') {
+            $target->tokens()->delete();
         }
 
-        $this->catat($request, 'ubah_hak_akses', 'Role', $id);
+        $this->catat($request, $data['status'] === 'aktif' ? 'aktifkan_user' : 'nonaktifkan_user', 'User', $id);
 
-        return response()->json(['message' => 'Hak akses disimpan.']);
+        return response()->json(['message' => 'Status akun diperbarui.']);
     }
 
-    public function ubahStatusRole(Request $request, $id): JsonResponse
-    {
-        $data = $request->validate(['status' => 'required|in:aktif,nonaktif']);
-
-        $role = Role::findOrFail($id);
-        if ($role->nma_role === 'admin' && $data['status'] === 'nonaktif') {
-            return response()->json(['message' => 'Role admin tidak boleh dinonaktifkan.'], 422);
-        }
-
-        DB::table('role')->where('id_role', $id)->update(['status' => $data['status']]);
-
-        $this->catat($request, 'ubah_status_role', 'Role', $id, 'Status menjadi ' . $data['status']);
-
-        return response()->json(['message' => 'Status role diperbarui.']);
-    }
 
     // ---------- Laporan ----------
-         private function dataLaporan(Request $request): array
+    private function dataLaporan(Request $request): array
         {
             $request->validate([
                 'dari'   => 'nullable|date',
                 'sampai' => 'nullable|date|after_or_equal:dari',
             ]);
 
-            $dari   = $request->input('dari', now()->subDays(29)->toDateString());
+            // FR-07: default periode 3 bulan terakhir
+            $dari   = $request->input('dari', now()->subMonths(3)->toDateString());
             $sampai = $request->input('sampai', today()->toDateString());
 
-            $log = fn () => Audit_Log::whereDate('waktu', '>=', $dari)
-                                    ->whereDate('waktu', '<=', $sampai);
+            $awal  = Carbon::parse($dari)->startOfDay();
+            $akhir = Carbon::parse($sampai)->endOfDay();
+
+            // ===== 1. Sesi charging per bulan (tunggu tabel dari pengemudi) =====
+            $sesiPerBulan = collect();
+            if (Schema::hasTable('sesi_charging')) {
+                $sesiPerBulan = DB::table('sesi_charging')
+                    ->whereBetween('waktu_mulai', [$awal, $akhir])
+                    ->select(
+                        DB::raw("DATE_FORMAT(waktu_mulai, '%Y-%m') as bulan"),
+                        DB::raw('COUNT(*) as jumlah_sesi'),
+                        DB::raw('COALESCE(SUM(energi_kwh), 0) as total_kwh')
+                    )
+                    ->groupBy('bulan')->orderBy('bulan')->get();
+            }
+
+            // ===== 2. Pendapatan per stasiun (tunggu tabel dari pengemudi) =====
+            $pendapatan = collect();
+            if (Schema::hasTable('transaksi') && Schema::hasTable('sesi_charging')) {
+                $pendapatan = DB::table('transaksi as t')
+                    ->join('sesi_charging as s', 's.id_sesi', '=', 't.id_sesi')
+                    ->join('charger as c', 'c.id_charger', '=', 's.id_charger')
+                    ->join('charging_station as st', 'st.id_stasiun', '=', 'c.id_stasiun')
+                    ->where('t.status', 'berhasil')
+                    ->whereBetween('t.waktu_bayar', [$awal, $akhir])
+                    ->select(
+                        'st.nama_stasiun as stasiun',
+                        DB::raw('COUNT(t.id_transaksi) as jumlah_transaksi'),
+                        DB::raw('SUM(t.jumlah) as total_pendapatan')
+                    )
+                    ->groupBy('st.id_stasiun', 'st.nama_stasiun')
+                    ->orderByDesc('total_pendapatan')->get();
+            }
+
+            // ===== 3. Riwayat kerusakan charger (bisa jalan sekarang) =====
+            $kerusakan = collect();
+            if (Schema::hasTable('gangguan')) {
+                $kerusakan = DB::table('gangguan as g')
+                    ->join('charger as c', 'c.id_charger', '=', 'g.id_charger')
+                    ->join('charging_station as st', 'st.id_stasiun', '=', 'c.id_stasiun')
+                    ->whereBetween('g.waktu_lapor', [$awal, $akhir])
+                    ->select(
+                        'st.nama_stasiun as stasiun',
+                        'c.kode_charger as charger',
+                        'g.deskripsi', 'g.waktu_lapor', 'g.waktu_selesai', 'g.status',
+                        DB::raw('TIMESTAMPDIFF(HOUR, g.waktu_lapor, COALESCE(g.waktu_selesai, NOW())) as durasi_jam')
+                    )
+                    ->orderByDesc('g.waktu_lapor')->get();
+            }
+
+            // ===== 4. Aktivitas sistem (laporan lama kamu) =====
+            $log = fn () => Audit_Log::whereBetween('waktu', [$awal, $akhir]);
 
             return [
-                'periode'         => compact('dari', 'sampai'),
+                'periode'                => compact('dari', 'sampai'),
+
+                'sesi_per_bulan'         => $sesiPerBulan,
+                'pendapatan_per_stasiun' => $pendapatan,
+                'total_pendapatan'       => (float) $pendapatan->sum('total_pendapatan'),
+                'kerusakan'              => $kerusakan,
+
                 'total_aktivitas' => $log()->count(),
                 'per_aktivitas'   => $log()->select('aktivitas', DB::raw('count(*) as total'))
                                         ->groupBy('aktivitas')->orderByDesc('total')->get(),
@@ -150,11 +165,8 @@ class AdminController extends Controller
                 'user_teraktif'   => $log()->select('id_user', DB::raw('count(*) as total'))
                                         ->groupBy('id_user')->with('user:id_user,identifier')
                                         ->orderByDesc('total')->limit(10)->get(),
-                'user_per_role'   => Role::withCount('users')->get()
-                                        ->map(fn ($r) => ['role' => $r->nma_role, 'total' => $r->users_count]),
             ];
         }
-
     // Untuk tampilan di layar (JSON)
     public function laporan(Request $request): JsonResponse
     {

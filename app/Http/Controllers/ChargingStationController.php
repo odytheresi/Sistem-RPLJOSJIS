@@ -11,10 +11,7 @@ class ChargingStationController extends Controller
 {
     public function index(): View
     {
-        $operator = auth()->user()->operator;
-
-        $stations = $operator->stations()
-            ->withCount('chargers')
+        $stations = ChargingStation::withCount('chargers')
             ->latest()
             ->get();
 
@@ -32,7 +29,7 @@ class ChargingStationController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'nama_station' => [
+            'nama_st' => [
                 'required',
                 'string',
                 'max:100'
@@ -57,6 +54,7 @@ class ChargingStationController extends Controller
             ],
         ]);
 
+        // id_operator tetap dicatat sebagai pembuat stasiun
         $operator = auth()->user()->operator;
 
         $operator->stations()->create($validated);
@@ -71,8 +69,6 @@ class ChargingStationController extends Controller
 
     public function show(ChargingStation $station): View
     {
-        $this->checkOwner($station);
-
         $station->load([
             'chargers.konektor',
             'tarifs',
@@ -87,8 +83,6 @@ class ChargingStationController extends Controller
 
     public function edit(ChargingStation $station): View
     {
-        $this->checkOwner($station);
-
         return view(
             'operator.station.edit',
             compact('station')
@@ -100,10 +94,8 @@ class ChargingStationController extends Controller
         ChargingStation $station
     ): RedirectResponse {
 
-        $this->checkOwner($station);
-
         $validated = $request->validate([
-            'nama_station' => [
+            'nama_st' => [
                 'required',
                 'string',
                 'max:100'
@@ -142,8 +134,6 @@ class ChargingStationController extends Controller
         ChargingStation $station
     ): RedirectResponse {
 
-        $this->checkOwner($station);
-
         $station->delete();
 
         return redirect()
@@ -152,16 +142,5 @@ class ChargingStationController extends Controller
                 'success',
                 'Charging station berhasil dihapus.'
             );
-    }
-
-    private function checkOwner(
-        ChargingStation $station
-    ): void {
-
-        abort_unless(
-            $station->id_operator ===
-            auth()->user()->operator->id_operator,
-            403
-        );
     }
 }

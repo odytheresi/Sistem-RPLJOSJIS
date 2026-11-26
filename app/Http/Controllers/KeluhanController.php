@@ -13,15 +13,9 @@ class KeluhanController extends Controller
 {
     public function index(): View
     {
-        $operator = $this->currentOperator();
+        $this->currentOperator();
 
         $keluhan = Keluhan::with('station')
-            ->whereHas('station', function ($query) use ($operator) {
-                $query->where(
-                    'id_operator',
-                    $operator->id_operator
-                );
-            })
             ->latest()
             ->get();
 
@@ -33,7 +27,7 @@ class KeluhanController extends Controller
 
     public function show(Keluhan $keluhan): View
     {
-        $this->checkOwner($keluhan);
+        $this->currentOperator();
 
         $keluhan->load([
             'station',
@@ -51,7 +45,7 @@ class KeluhanController extends Controller
         Keluhan $keluhan
     ): RedirectResponse {
 
-        $this->checkOwner($keluhan);
+        $this->currentOperator();
 
         $validated = $request->validate([
             'status' => [
@@ -71,7 +65,7 @@ class KeluhanController extends Controller
     }
 
     /**
-     * Ambil operator dari sesi login manual (session 'user_id' diisi AuthController).
+     * Memastikan yang login adalah operator.
      */
     private function currentOperator(): Operator
     {
@@ -86,16 +80,5 @@ class KeluhanController extends Controller
         }
 
         return $operator;
-    }
-
-    private function checkOwner(
-        Keluhan $keluhan
-    ): void {
-
-        abort_unless(
-            (int) $keluhan->station->id_operator ===
-            (int) $this->currentOperator()->id_operator,
-            403
-        );
     }
 }
